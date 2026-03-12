@@ -68,12 +68,10 @@ paths = resolve_paths(args)
 
 print(f"[fact_orders] Reading Bronze from {paths.bronze_table('orders')}")
 bronze_df = spark.read.schema(ORDERS_SCHEMA).parquet(paths.bronze_table("orders"))
-print(f"[fact_orders] Bronze row count: {bronze_df.count()}")
 
 # ── CDC reconciliation ────────────────────────────────────────────────────────
 
 current_df = reconcile(bronze_df, pk_col="order_id")
-print(f"[fact_orders] After CDC reconciliation: {current_df.count()} rows")
 
 # ── Build fact table columns ──────────────────────────────────────────────────
 #
@@ -99,7 +97,6 @@ RULES = {
 }
 
 clean_df = validate(fact_df, RULES, paths.quarantine_root, "fact_orders")
-print(f"[fact_orders] Valid rows after validation: {clean_df.count()}")
 
 # ── Write Silver ──────────────────────────────────────────────────────────────
 #
@@ -109,6 +106,6 @@ print(f"[fact_orders] Valid rows after validation: {clean_df.count()}")
 silver_path = paths.silver_table("fact_orders")
 print(f"[fact_orders] Writing Silver to {silver_path}")
 clean_df.write.mode("overwrite").partitionBy("order_year", "order_month").parquet(silver_path)
-print(f"[fact_orders] Done.")
+print("[fact_orders] Done.")
 
 job.commit()

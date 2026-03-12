@@ -6,7 +6,9 @@ target-version = "py311"
 # E/W = pycodestyle, F = pyflakes, I = isort, N = naming, UP = pyupgrade
 select = ["E", "F", "I", "N", "W", "UP"]
 ignore = [
-    "E501",  # line too long — ruff format handles this
+    "E501",   # line too long — ruff format handles this
+    "N812",   # lowercase imported as non-lowercase — PySpark convention: `functions as F`
+    "N816",   # mixedCase in global scope — Glue convention: `glueContext`
 ]
 
 [tool.mypy]

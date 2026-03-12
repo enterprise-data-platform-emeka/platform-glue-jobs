@@ -63,45 +63,47 @@ def validate(
     if not rules:
         return df
 
-    # Add a boolean column for each rule: True = passed, False = failed.
-    annotated = df
-    check_cols = []
-    for rule_name, expr in rules.items():
-        col_name = f"_check_{rule_name}"
-        annotated = annotated.withColumn(col_name, F.expr(expr))
-        check_cols.append((col_name, rule_name))
+    check_col_names = [f"_check_{name}" for name in rules]
 
-    # A row is valid only if every check column is True.
-    all_pass_expr = " AND ".join(col for col, _ in check_cols)
+    # Add all check columns in a single select() rather than chained withColumn()
+    # calls. Chained withColumn() in a loop builds a longer and longer query plan
+    # on every iteration, which causes quadratic plan-analysis time at scale.
+    # A single select() builds the same logical plan in one step.
+    annotated = df.select(
+        "*",
+        *[F.expr(expr).alias(f"_check_{name}") for name, expr in rules.items()],
+    )
 
-    valid_df = annotated.filter(all_pass_expr).drop(*[col for col, _ in check_cols])
+    # Cache annotated so that Spark does not re-execute the input DAG for both
+    # the valid write path and the quarantine write path. Without caching,
+    # each downstream action (valid_df.write and quarantine_df.write) would
+    # independently trigger the full plan from the beginning, reading and
+    # processing the input data twice.
+    annotated.cache()
 
+    all_pass_expr = " AND ".join(check_col_names)
+
+    valid_df = annotated.filter(all_pass_expr).drop(*check_col_names)
     invalid_df = annotated.filter(f"NOT ({all_pass_expr})")
 
-    # Count invalid rows. If there are none, skip the quarantine write.
-    invalid_count = invalid_df.count()
+    # Build a human-readable _validation_errors column that names every rule
+    # the row failed, then write invalid rows to quarantine.
+    # The write() call is the only action we trigger on this path — no
+    # separate count() needed to guard it, because writing an empty DataFrame
+    # is a no-op for Parquet (Spark writes zero files and exits cleanly).
+    error_parts = [
+        F.when(~F.col(col), F.lit(name)).otherwise(F.lit(None))
+        for col, name in zip(check_col_names, rules)
+    ]
+    (
+        invalid_df
+        .withColumn("_validation_errors", F.concat_ws(", ", *error_parts))
+        .drop(*check_col_names)
+        .write.mode("append")
+        .parquet(f"{quarantine_path}/{table_name}")
+    )
 
-    if invalid_count > 0:
-        # Build a human-readable _validation_errors column that lists
-        # every rule the row failed, separated by commas.
-        error_parts = [
-            F.when(~F.col(col), F.lit(rule_name)).otherwise(F.lit(None))
-            for col, rule_name in check_cols
-        ]
-        quarantine_df = (
-            invalid_df
-            .withColumn(
-                "_validation_errors",
-                F.concat_ws(", ", *error_parts),
-            )
-            .drop(*[col for col, _ in check_cols])
-        )
-
-        quarantine_df.write.mode("append").parquet(f"{quarantine_path}/{table_name}")
-
-        print(  # noqa: T201
-            f"[validation] {table_name}: {invalid_count} rows quarantined "
-            f"to {quarantine_path}/{table_name}"
-        )
+    # Release the cached plan now that both paths have consumed it.
+    annotated.unpersist()
 
     return valid_df

@@ -65,7 +65,6 @@ paths = resolve_paths(args)
 
 print(f"[dim_customer] Reading Bronze from {paths.bronze_table('customers')}")
 bronze_df = spark.read.schema(CUSTOMERS_SCHEMA).parquet(paths.bronze_table("customers"))
-print(f"[dim_customer] Bronze row count: {bronze_df.count()}")
 
 # ── CDC reconciliation ────────────────────────────────────────────────────────
 #
@@ -73,7 +72,6 @@ print(f"[dim_customer] Bronze row count: {bronze_df.count()}")
 # Each customer_id ends up with exactly one row reflecting its latest values.
 
 current_df = reconcile(bronze_df, pk_col="customer_id")
-print(f"[dim_customer] After CDC reconciliation: {current_df.count()} rows")
 
 # ── Select Silver columns ─────────────────────────────────────────────────────
 #
@@ -101,7 +99,6 @@ RULES = {
 }
 
 clean_df = validate(dim_df, RULES, paths.quarantine_root, "dim_customer")
-print(f"[dim_customer] Valid rows after validation: {clean_df.count()}")
 
 # ── Write Silver ──────────────────────────────────────────────────────────────
 #
@@ -111,6 +108,6 @@ print(f"[dim_customer] Valid rows after validation: {clean_df.count()}")
 silver_path = paths.silver_table("dim_customer")
 print(f"[dim_customer] Writing Silver to {silver_path}")
 clean_df.write.mode("overwrite").parquet(silver_path)
-print(f"[dim_customer] Done.")
+print("[dim_customer] Done.")
 
 job.commit()
