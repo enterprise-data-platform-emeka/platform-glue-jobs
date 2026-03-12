@@ -100,7 +100,15 @@ current_orders_df = reconcile(bronze_orders_df, pk_col="order_id").select(
 # ── Build fact table columns ──────────────────────────────────────────────────
 #
 # Join order_items to orders to get order_date, then derive year/month
-# partition columns. Drop updated_at — it's a technical audit column.
+# partition columns in a single select().
+#
+# current_orders_df is small (one row per order, no history), so we broadcast
+# it to every executor. This turns the default sort-merge join (which requires
+# an expensive shuffle of both sides) into a broadcast join (the small side is
+# sent to each executor in memory, the large side is never shuffled). Glue 4.0
+# has Adaptive Query Execution enabled by default and may do this automatically,
+# but an explicit F.broadcast() hint is the enterprise standard: it makes intent
+# clear and is reliable regardless of AQE thresholds.
 
 fact_df = (
     current_items_df
@@ -112,10 +120,17 @@ fact_df = (
         "unit_price",
         "line_total",
     )
-    .join(current_orders_df, on="order_id", how="left")
-    .withColumn("order_year", F.year("order_date"))
-    .withColumn("order_month", F.month("order_date"))
-    .drop("order_date")
+    .join(F.broadcast(current_orders_df), on="order_id", how="left")
+    .select(
+        "order_item_id",
+        "order_id",
+        "product_id",
+        "quantity",
+        "unit_price",
+        "line_total",
+        F.year("order_date").alias("order_year"),
+        F.month("order_date").alias("order_month"),
+    )
 )
 
 # ── Validate ──────────────────────────────────────────────────────────────────
@@ -127,6 +142,16 @@ RULES = {
     "quantity_positive": "quantity > 0",
     "unit_price_positive": "unit_price > 0",
     "line_total_positive": "line_total > 0",
+    # Guard against orphaned order_items whose parent order was deleted.
+    # When an order is deleted in PostgreSQL, DMS writes Op='D' for that order_id.
+    # CDC reconciliation removes deleted orders from current_orders_df. If an
+    # order_item references a deleted order, the left join above produces
+    # order_date=null, which propagates to order_year=null and order_month=null.
+    # Parquet partitions with null values land in the __HIVE_DEFAULT_PARTITION__
+    # directory — invisible to Athena partition filtering and unqueryable by dbt.
+    # We quarantine these rows rather than write them to Silver.
+    "order_year_not_null": "order_year IS NOT NULL",
+    "order_month_not_null": "order_month IS NOT NULL",
 }
 
 clean_df = validate(fact_df, RULES, paths.quarantine_root, "fact_order_items")

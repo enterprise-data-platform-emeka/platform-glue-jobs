@@ -76,9 +76,16 @@ def validate(
 
     # Cache annotated so that Spark does not re-execute the input DAG for both
     # the valid write path and the quarantine write path. Without caching,
-    # each downstream action (valid_df.write and quarantine_df.write) would
-    # independently trigger the full plan from the beginning, reading and
-    # processing the input data twice.
+    # each downstream action (quarantine_df.write and the caller's Silver write)
+    # independently triggers the full plan — Bronze read + CDC window function +
+    # check column expressions — from scratch.
+    #
+    # We do NOT call unpersist() here. validate() returns valid_df as a lazy
+    # DataFrame; the caller triggers the Silver write after this function returns.
+    # If we called unpersist() before returning, annotated would be gone by the
+    # time the caller writes, and Spark would re-execute the full DAG anyway —
+    # defeating the cache entirely. Glue jobs are short-lived; Spark releases all
+    # cached data automatically when the job completes.
     annotated.cache()
 
     all_pass_expr = " AND ".join(check_col_names)
@@ -91,6 +98,8 @@ def validate(
     # The write() call is the only action we trigger on this path — no
     # separate count() needed to guard it, because writing an empty DataFrame
     # is a no-op for Parquet (Spark writes zero files and exits cleanly).
+    # This write also materialises the annotated cache so the Silver write
+    # (triggered by the caller) reuses it instead of re-reading Bronze.
     error_parts = [
         F.when(~F.col(col), F.lit(name)).otherwise(F.lit(None))
         for col, name in zip(check_col_names, rules)
@@ -102,8 +111,5 @@ def validate(
         .write.mode("append")
         .parquet(f"{quarantine_path}/{table_name}")
     )
-
-    # Release the cached plan now that both paths have consumed it.
-    annotated.unpersist()
 
     return valid_df
