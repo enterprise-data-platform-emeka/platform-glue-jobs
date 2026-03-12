@@ -8,7 +8,7 @@
 #   1. make setup           — install host-side Python tools
 #   2. make pull            — pull the AWS Glue Docker image
 #   3. make generate-bronze — create test Parquet files in data/bronze/
-#   4. make run-all         — run all 4 Silver jobs inside Docker
+#   4. make run-all         — run all 6 Silver jobs inside Docker
 #   5. make test            — run the test suite on the host
 #
 # Deploying to AWS Glue:
@@ -39,7 +39,9 @@ LOCAL_QUARANTINE := file:///home/glue_user/workspace/data/quarantine
 GLUE_RUN := docker compose run --rm glue
 
 .PHONY: help setup pull generate-bronze \
-        run-dim-customer run-dim-product run-fact-orders run-fact-order-items run-all \
+        run-dim-customer run-dim-product \
+        run-fact-orders run-fact-order-items run-fact-payments run-fact-shipments \
+        run-all \
         test lint typecheck deploy clean
 
 # ── Help ──────────────────────────────────────────────────────────────────────
@@ -54,11 +56,13 @@ help:
 	@echo ""
 	@echo "  Local development"
 	@echo "    make generate-bronze    Generate test Bronze Parquet files in data/bronze/"
-	@echo "    make run-dim-customer   Run the dim_customer Silver job locally"
-	@echo "    make run-dim-product    Run the dim_product Silver job locally"
-	@echo "    make run-fact-orders    Run the fact_orders Silver job locally"
+	@echo "    make run-dim-customer      Run the dim_customer Silver job locally"
+	@echo "    make run-dim-product       Run the dim_product Silver job locally"
+	@echo "    make run-fact-orders       Run the fact_orders Silver job locally"
 	@echo "    make run-fact-order-items  Run the fact_order_items Silver job locally"
-	@echo "    make run-all            Run all 4 Silver jobs locally (in dependency order)"
+	@echo "    make run-fact-payments     Run the fact_payments Silver job locally"
+	@echo "    make run-fact-shipments    Run the fact_shipments Silver job locally"
+	@echo "    make run-all               Run all 6 Silver jobs locally (in dependency order)"
 	@echo ""
 	@echo "  Code quality"
 	@echo "    make test               Run the test suite"
@@ -142,7 +146,27 @@ run-fact-order-items:
 		--SILVER_PATH $(LOCAL_SILVER) \
 		--QUARANTINE_PATH $(LOCAL_QUARANTINE)
 
-run-all: run-dim-customer run-dim-product run-fact-orders run-fact-order-items
+run-fact-payments:
+	@echo "Running fact_payments job..."
+	$(GLUE_RUN) gluesparksubmit \
+		--extra-py-files /home/glue_user/workspace/lib \
+		jobs/fact_payments.py \
+		--JOB_NAME fact_payments \
+		--BRONZE_PATH $(LOCAL_BRONZE) \
+		--SILVER_PATH $(LOCAL_SILVER) \
+		--QUARANTINE_PATH $(LOCAL_QUARANTINE)
+
+run-fact-shipments:
+	@echo "Running fact_shipments job..."
+	$(GLUE_RUN) gluesparksubmit \
+		--extra-py-files /home/glue_user/workspace/lib \
+		jobs/fact_shipments.py \
+		--JOB_NAME fact_shipments \
+		--BRONZE_PATH $(LOCAL_BRONZE) \
+		--SILVER_PATH $(LOCAL_SILVER) \
+		--QUARANTINE_PATH $(LOCAL_QUARANTINE)
+
+run-all: run-dim-customer run-dim-product run-fact-orders run-fact-order-items run-fact-payments run-fact-shipments
 	@echo ""
 	@echo "All Silver jobs complete. Output in data/silver/"
 
@@ -179,7 +203,7 @@ deploy:
 	aws s3 sync lib/ s3://$(GLUE_SCRIPTS_BUCKET)/glue-scripts/lib/ \
 		--exclude "*" --include "*.py" --profile $(ENV)-admin
 	@echo "Creating/updating Glue job definitions..."
-	@for job in dim_customer dim_product fact_orders fact_order_items; do \
+	@for job in dim_customer dim_product fact_orders fact_order_items fact_payments fact_shipments; do \
 		echo "  Updating $$job..."; \
 		aws glue create-job \
 			--name edp-$(ENV)-$$job \
