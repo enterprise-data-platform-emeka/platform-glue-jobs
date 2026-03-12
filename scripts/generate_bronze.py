@@ -31,6 +31,7 @@ from pathlib import Path
 
 import pandas as pd
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 from faker import Faker
 
@@ -83,17 +84,39 @@ def _ts(days_ago: float = 0.0) -> datetime:
     return _now - timedelta(days=days_ago)  # type: ignore[return-value]
 
 
-def _dms_ts(days_ago: float = 0.0) -> datetime:
-    """Simulate a _dms_timestamp slightly after the row's own timestamp."""
-    return _ts(days_ago) + timedelta(seconds=random.uniform(1, 60))
+def _dms_ts(days_ago: float = 0.0) -> str:
+    """Simulate a _dms_timestamp slightly after the row's own timestamp.
+
+    Returns a plain string in the same format DMS uses: 'YYYY-MM-DD HH:MM:SS.ffffff'.
+    DMS writes this column as Parquet string, not as a timestamp type.
+    The format is ISO 8601-compatible so lexicographic ordering works correctly
+    in cdc.reconcile() when finding the latest version of each row.
+    """
+    ts = _ts(days_ago) + timedelta(seconds=random.uniform(1, 60))
+    return ts.strftime("%Y-%m-%d %H:%M:%S.%f")
 
 
 def _write(table_name: str, df: pd.DataFrame) -> None:
-    """Write a DataFrame to data/bronze/raw/public/<table>/LOAD00000001.parquet."""
+    """Write a DataFrame to data/bronze/raw/public/<table>/LOAD00000001.parquet.
+
+    Type casts applied to match real AWS DMS Parquet output exactly:
+      - int64  → int32         (DMS maps PostgreSQL INTEGER to Parquet INT32)
+      - float64 → decimal128(10,2)  (DMS maps PostgreSQL NUMERIC to Parquet DECIMAL)
+      - _dms_timestamp is already a string (written by _dms_ts())
+    """
     out_dir = BRONZE_ROOT / table_name
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "LOAD00000001.parquet"
+    for col in df.select_dtypes(include="int64").columns:
+        df[col] = df[col].astype("int32")
     table = pa.Table.from_pandas(df, preserve_index=False)
+    for i in range(table.num_columns):
+        if pa.types.is_floating(table.schema.field(i).type):
+            table = table.set_column(
+                i,
+                table.schema.field(i).with_type(pa.decimal128(10, 2)),
+                pc.cast(table.column(i), pa.decimal128(10, 2)),
+            )
     pq.write_table(table, out_path, compression="gzip")
     print(f"  Wrote {len(df):>5} rows -> {out_path.relative_to(Path.cwd())}")
 

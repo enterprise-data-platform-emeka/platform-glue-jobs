@@ -40,6 +40,7 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 
 from lib.cdc import reconcile
+from lib.job_utils import commit_job, init_job
 from lib.paths import resolve_paths
 from lib.schemas import CUSTOMERS_SCHEMA
 from lib.validation import validate
@@ -54,7 +55,7 @@ sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
-job.init(args["JOB_NAME"], args)
+init_job(job, args["JOB_NAME"], args)
 
 paths = resolve_paths(args)
 
@@ -110,4 +111,4 @@ print(f"[dim_customer] Writing Silver to {silver_path}")
 clean_df.write.mode("overwrite").parquet(silver_path)
 print("[dim_customer] Done.")
 
-job.commit()
+commit_job(job)

@@ -29,9 +29,12 @@ from pyspark.sql.types import (
 
 # ── Shared DMS metadata columns ───────────────────────────────────────────────
 
+# DMS writes _dms_timestamp as a plain string ("2026-03-11 13:07:07.797094"),
+# not as a Parquet timestamp type. The format is ISO 8601-compatible so
+# lexicographic ordering in cdc.reconcile() still produces the correct result.
 _DMS_FIELDS = [
     StructField("Op", StringType(), nullable=True),
-    StructField("_dms_timestamp", TimestampType(), nullable=True),
+    StructField("_dms_timestamp", StringType(), nullable=True),
 ]
 
 # ── Table schemas ─────────────────────────────────────────────────────────────

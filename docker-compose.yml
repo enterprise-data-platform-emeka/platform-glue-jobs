@@ -13,6 +13,10 @@ services:
       - ./lib:/home/glue_user/workspace/lib
       - ./jobs:/home/glue_user/workspace/jobs
       - ./scripts:/home/glue_user/workspace/scripts
+      # Persist Spark event logs to the host so the History Server can read them
+      # after the job container exits. spark-defaults.conf already sets
+      # spark.eventLog.enabled=true and spark.history.fs.logDirectory=/tmp/spark-events.
+      - ./spark-events:/tmp/spark-events
 
     working_dir: /home/glue_user/workspace
 
@@ -23,7 +27,22 @@ services:
       - DISABLE_SSL=true
       - AWS_DEFAULT_REGION=eu-central-1
 
-    # Default command keeps the container alive for interactive use.
-    # Overridden by `docker compose run glue gluesparksubmit ...` in the Makefile.
-    entrypoint: []
-    command: ["tail", "-f", "/dev/null"]
+    # The image's default entrypoint generates SSL certs and starts the Spark
+    # History Server before exec'ing the user's command. We do not override it.
+    # Overridden per-run by `docker compose run glue /home/glue_user/jupyter/bin/gluesparksubmit ...`
+
+  history-server:
+    # Runs the Spark History Server so you can inspect completed job DAGs, stages,
+    # and task timelines after a job finishes. Access at http://localhost:18080.
+    # Start with: make spark-ui
+    platform: linux/amd64
+    image: amazon/aws-glue-libs:glue_libs_4.0.0_image_01
+    ports:
+      - "18080:18080"
+    volumes:
+      - ./spark-events:/tmp/spark-events
+    environment:
+      - DISABLE_SSL=true
+      - AWS_DEFAULT_REGION=eu-central-1
+    entrypoint: ["/home/glue_user/spark/bin/spark-class", "org.apache.spark.deploy.history.HistoryServer"]
+    command: []

@@ -49,6 +49,7 @@ from pyspark.context import SparkContext
 from pyspark.sql import functions as F
 
 from lib.cdc import reconcile
+from lib.job_utils import commit_job, init_job
 from lib.paths import resolve_paths
 from lib.schemas import PAYMENTS_SCHEMA
 from lib.validation import validate
@@ -63,7 +64,7 @@ sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 job = Job(glueContext)
-job.init(args["JOB_NAME"], args)
+init_job(job, args["JOB_NAME"], args)
 
 paths = resolve_paths(args)
 
@@ -120,4 +121,4 @@ print(f"[fact_payments] Writing Silver to {silver_path}")
 clean_df.write.mode("overwrite").partitionBy("payment_year", "payment_month").parquet(silver_path)
 print("[fact_payments] Done.")
 
-job.commit()
+commit_job(job)
