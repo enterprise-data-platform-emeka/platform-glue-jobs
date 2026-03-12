@@ -1,0 +1,8 @@
+# Host-side dependencies only.
+# These are used by scripts/generate_bronze.py and the test suite.
+# The Glue jobs themselves run inside the AWS Glue Docker container,
+# which already has PySpark, awsglue, and all Spark dependencies pre-installed.
+
+pandas>=2.0
+pyarrow>=12.0
+faker>=19.0

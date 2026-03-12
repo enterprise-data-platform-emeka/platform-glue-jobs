@@ -1,0 +1,29 @@
+services:
+  glue:
+    # AWS Glue 4.0 image — Spark 3.3, Python 3.10, Hadoop 3.3.
+    # On Apple Silicon Macs this runs under Rosetta 2 (linux/amd64).
+    # The image is ~3 GB and only needs to be pulled once.
+    platform: linux/amd64
+    image: amazon/aws-glue-libs:glue_libs_4.0.0_image_01
+
+    # Mount the workspace so job code and data are available inside the container.
+    # Changes to lib/ and jobs/ on the host are reflected immediately — no rebuild needed.
+    volumes:
+      - ./data:/home/glue_user/workspace/data
+      - ./lib:/home/glue_user/workspace/lib
+      - ./jobs:/home/glue_user/workspace/jobs
+      - ./scripts:/home/glue_user/workspace/scripts
+
+    working_dir: /home/glue_user/workspace
+
+    # PYTHONPATH tells Spark workers where to find lib/ (our shared utilities).
+    # DISABLE_SSL=true avoids certificate issues in the local Spark UI.
+    environment:
+      - PYTHONPATH=/home/glue_user/workspace
+      - DISABLE_SSL=true
+      - AWS_DEFAULT_REGION=eu-central-1
+
+    # Default command keeps the container alive for interactive use.
+    # Overridden by `docker compose run glue gluesparksubmit ...` in the Makefile.
+    entrypoint: []
+    command: ["tail", "-f", "/dev/null"]

@@ -1,0 +1,7 @@
+# Development tools — linting, type checking, testing.
+# Install alongside requirements.txt: pip install -r requirements.txt -r requirements-dev.txt
+
+ruff>=0.1
+mypy>=1.5
+pytest>=7.4
+pytest-cov>=4.1
