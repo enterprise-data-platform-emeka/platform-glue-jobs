@@ -1,0 +1,70 @@
+name: CI
+
+# Runs lint, type checking, and unit tests on every pull request.
+# No AWS credentials or Docker required — Glue jobs run inside Docker locally,
+# but the test suite runs on the host using the lightweight Python dependencies.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  # ── Lint and type check ──────────────────────────────────────────────────────
+  quality:
+    name: Lint and type check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dev dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Lint (ruff)
+        run: ruff check scripts/ tests/
+
+      - name: Type check (mypy)
+        run: mypy scripts/ --ignore-missing-imports
+
+  # ── Unit tests ───────────────────────────────────────────────────────────────
+  # Runs the host-side test suite (generate_bronze, lib utilities).
+  # Glue job logic is tested with the Docker-based integration suite locally.
+  # The "glue" marker is excluded here — those tests require the 3 GB Glue image.
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run unit tests
+        run: pytest tests/ -m "not glue" --cov=scripts --cov-report=xml
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false

@@ -1,0 +1,138 @@
+name: Deploy
+
+# Packages and deploys PySpark Glue jobs to AWS.
+#
+# What "deploy" means here:
+#   1. Package lib/ into lib.zip (shared utilities imported by all jobs)
+#   2. Upload job scripts (jobs/*.py) and lib.zip to the Glue scripts S3 bucket
+#   3. Create or update the Glue job definitions via the AWS CLI
+#
+# Triggers:
+#   - push to main    → automatically deploys to dev
+#   - workflow_dispatch → manually deploys to staging or prod
+#
+# Promotion path: dev (auto) → staging (manual) → prod (manual + approval)
+#
+# AWS authentication uses OIDC (no long-lived access keys).
+# Required IAM role: edp-{env}-github-actions-role
+#
+# Required GitHub configuration:
+#   Repository variables:
+#     AWS_ACCOUNT_ID  — 12-digit AWS account ID
+#   Environments: dev, staging, prod (Settings → Environments)
+#     staging — add required reviewers
+#     prod    — add required reviewers + deployment protection rules
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [staging, prod]
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment || 'dev' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      ENV: ${{ inputs.environment || 'dev' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/edp-${{ env.ENV }}-github-actions-role
+          aws-region: eu-central-1
+
+      - name: Resolve AWS account ID
+        id: account
+        run: echo "id=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+
+      - name: Set S3 bucket names
+        id: buckets
+        run: |
+          ACCOUNT_ID=${{ steps.account.outputs.id }}
+          echo "scripts=edp-${{ env.ENV }}-${ACCOUNT_ID}-glue-scripts" >> "$GITHUB_OUTPUT"
+
+      - name: Package lib/
+        run: zip -r lib.zip lib/ -x "lib/__pycache__/*" -x "lib/*.pyc"
+
+      - name: Upload job scripts to S3
+        run: |
+          aws s3 sync jobs/ s3://${{ steps.buckets.outputs.scripts }}/glue-scripts/ \
+            --exclude "*" --include "*.py"
+
+      - name: Upload lib.zip to S3
+        run: |
+          aws s3 cp lib.zip s3://${{ steps.buckets.outputs.scripts }}/glue-scripts/lib.zip
+
+      # Creates the job if it does not exist, otherwise updates it.
+      # The fallback to update-job is intentional — create-job fails if the job
+      # already exists, and update-job fails if it does not, so the || handles both.
+      - name: Create or update Glue job definitions
+        run: |
+          SCRIPTS_BUCKET=${{ steps.buckets.outputs.scripts }}
+          ACCOUNT_ID=${{ steps.account.outputs.id }}
+          BRONZE_BUCKET="edp-${{ env.ENV }}-${ACCOUNT_ID}-bronze"
+          SILVER_BUCKET="edp-${{ env.ENV }}-${ACCOUNT_ID}-silver"
+          QUARANTINE_BUCKET="edp-${{ env.ENV }}-${ACCOUNT_ID}-quarantine"
+
+          for job in dim_customer dim_product fact_orders fact_order_items fact_payments fact_shipments; do
+            echo "Deploying edp-${{ env.ENV }}-${job}..."
+
+            DEFAULT_ARGS=$(cat <<JSON
+          {
+            "--job-language": "python",
+            "--extra-py-files": "s3://${SCRIPTS_BUCKET}/glue-scripts/lib.zip",
+            "--BRONZE_PATH": "s3://${BRONZE_BUCKET}/",
+            "--SILVER_PATH": "s3://${SILVER_BUCKET}/",
+            "--QUARANTINE_PATH": "s3://${QUARANTINE_BUCKET}/",
+            "--enable-glue-datacatalog": "true",
+            "--enable-job-insights": "true",
+            "--enable-spark-ui": "true",
+            "--spark-event-logs-path": "s3://${SCRIPTS_BUCKET}/spark-logs/"
+          }
+          JSON
+            )
+
+            aws glue create-job \
+              --name "edp-${{ env.ENV }}-${job}" \
+              --role "edp-${{ env.ENV }}-glue-role" \
+              --command "Name=glueetl,ScriptLocation=s3://${SCRIPTS_BUCKET}/glue-scripts/${job}.py,PythonVersion=3" \
+              --default-arguments "${DEFAULT_ARGS}" \
+              --glue-version "4.0" \
+              --number-of-workers 2 \
+              --worker-type G.1X \
+            2>/dev/null \
+            || aws glue update-job \
+              --job-name "edp-${{ env.ENV }}-${job}" \
+              --job-update "{
+                \"Role\": \"edp-${{ env.ENV }}-glue-role\",
+                \"GlueVersion\": \"4.0\",
+                \"NumberOfWorkers\": 2,
+                \"WorkerType\": \"G.1X\",
+                \"Command\": {\"Name\": \"glueetl\", \"ScriptLocation\": \"s3://${SCRIPTS_BUCKET}/glue-scripts/${job}.py\", \"PythonVersion\": \"3\"},
+                \"DefaultArguments\": ${DEFAULT_ARGS}
+              }"
+          done
+
+      - name: Deployment summary
+        run: |
+          echo "Deployed 6 Glue jobs to ${{ env.ENV }}:"
+          for job in dim_customer dim_product fact_orders fact_order_items fact_payments fact_shipments; do
+            echo "  edp-${{ env.ENV }}-${job}"
+          done
