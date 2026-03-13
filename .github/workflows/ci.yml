@@ -1,8 +1,14 @@
 name: CI
 
-# Runs lint, type checking, and unit tests on every pull request.
-# No AWS credentials or Docker required — Glue jobs run inside Docker locally,
-# but the test suite runs on the host using the lightweight Python dependencies.
+# Runs lint, type checking, unit tests, and Glue integration tests on every
+# pull request and push to main.
+#
+# Job order:
+#   quality + unit-tests (parallel, fast, no Docker)
+#   └── glue-integration (only if both pass, pulls the Glue Docker image)
+#
+# The deploy workflow triggers only after this CI workflow completes
+# successfully on main, ensuring no broken code reaches dev.
 
 on:
   pull_request:
@@ -38,9 +44,6 @@ jobs:
         run: mypy scripts/ --ignore-missing-imports
 
   # ── Unit tests ───────────────────────────────────────────────────────────────
-  # Runs the host-side test suite (generate_bronze, lib utilities).
-  # Glue job logic is tested with the Docker-based integration suite locally.
-  # The "glue" marker is excluded here — those tests require the 3 GB Glue image.
   unit-tests:
     name: Unit tests
     runs-on: ubuntu-latest
@@ -68,3 +71,84 @@ jobs:
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
+
+  # ── Glue integration tests ───────────────────────────────────────────────────
+  # Runs all 6 Silver PySpark jobs inside the real AWS Glue Docker image.
+  # This is the only job that proves the actual Spark logic works end-to-end.
+  #
+  # The image (~3 GB) is cached between runs using GitHub Actions cache.
+  # First pull: ~2-3 minutes. Subsequent runs with cache hit: ~30 seconds.
+  #
+  # Only runs after quality and unit-tests pass to avoid wasting time
+  # pulling a large Docker image when there are already lint/test failures.
+  glue-integration:
+    name: Glue integration (Spark)
+    runs-on: ubuntu-latest
+    needs: [quality, unit-tests]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install host dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Cache Glue Docker image layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/glue-image-cache
+          key: glue-image-${{ runner.os }}-glue_libs_4.0.0_image_01
+
+      - name: Load cached image or pull from Docker Hub
+        run: |
+          if [ -f /tmp/glue-image-cache/glue.tar ]; then
+            echo "Loading image from cache..."
+            docker load < /tmp/glue-image-cache/glue.tar
+          else
+            echo "Pulling image from Docker Hub..."
+            docker pull --platform linux/amd64 amazon/aws-glue-libs:glue_libs_4.0.0_image_01
+            mkdir -p /tmp/glue-image-cache
+            docker save amazon/aws-glue-libs:glue_libs_4.0.0_image_01 \
+              > /tmp/glue-image-cache/glue.tar
+          fi
+
+      - name: Generate Bronze test data
+        run: |
+          mkdir -p data/bronze data/silver data/quarantine spark-events
+          python scripts/generate_bronze.py
+
+      - name: Run all 6 Silver jobs
+        run: |
+          GLUE_SUBMIT=/home/glue_user/spark/bin/spark-submit
+
+          for job in dim_customer dim_product fact_orders fact_order_items fact_payments fact_shipments; do
+            echo ""
+            echo "Running ${job}..."
+            docker compose run --rm glue ${GLUE_SUBMIT} \
+              jobs/${job}.py \
+              --JOB_NAME ${job} \
+              --BRONZE_PATH file:///home/glue_user/workspace/data/bronze \
+              --SILVER_PATH file:///home/glue_user/workspace/data/silver \
+              --QUARANTINE_PATH file:///home/glue_user/workspace/data/quarantine
+          done
+
+      - name: Verify Silver output exists
+        run: |
+          echo "Checking Silver output..."
+          for table in dim_customer dim_product fact_orders fact_order_items fact_payments fact_shipments; do
+            count=$(find data/silver/${table} -name "*.parquet" 2>/dev/null | wc -l)
+            if [ "$count" -eq 0 ]; then
+              echo "FAIL: No Parquet files found for ${table}"
+              exit 1
+            fi
+            echo "  ${table}: ${count} Parquet file(s)"
+          done
+          echo "All Silver tables produced output."

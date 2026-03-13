@@ -24,7 +24,11 @@ name: Deploy
 #     prod    — add required reviewers + deployment protection rules
 
 on:
-  push:
+  # Triggers only after CI completes successfully on main.
+  # This ensures all Glue integration tests pass before any deployment.
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
 
   workflow_dispatch:
@@ -40,6 +44,9 @@ jobs:
     name: Deploy to ${{ inputs.environment || 'dev' }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'dev' }}
+    # When triggered by workflow_run, only proceed if CI actually passed.
+    # workflow_dispatch bypasses this check (manual deploys are intentional).
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     permissions:
       id-token: write
