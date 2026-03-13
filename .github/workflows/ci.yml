@@ -133,6 +133,7 @@ jobs:
             echo ""
             echo "Running ${job}..."
             docker compose run --rm glue ${GLUE_SUBMIT} \
+              --conf spark.eventLog.enabled=false \
               jobs/${job}.py \
               --JOB_NAME ${job} \
               --BRONZE_PATH file:///home/glue_user/workspace/data/bronze \
