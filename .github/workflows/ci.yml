@@ -123,6 +123,7 @@ jobs:
       - name: Generate Bronze test data
         run: |
           mkdir -p data/bronze data/silver data/quarantine spark-events
+          chmod -R 777 data/ spark-events/
           python scripts/generate_bronze.py
 
       - name: Run all 6 Silver jobs
