@@ -149,7 +149,7 @@ RULES = {
     # order_item references a deleted order, the left join above produces
     # order_date=null, which propagates to order_year=null and order_month=null.
     # Parquet partitions with null values land in the __HIVE_DEFAULT_PARTITION__
-    # directory — invisible to Athena partition filtering and unqueryable by dbt.
+    # directory, invisible to Athena partition filtering and unqueryable by dbt.
     # We quarantine these rows rather than write them to Silver.
     "order_year_not_null": "order_year IS NOT NULL",
     "order_month_not_null": "order_month IS NOT NULL",

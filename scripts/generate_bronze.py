@@ -2,11 +2,11 @@
 Generate local Bronze Parquet test data that exactly mirrors what AWS DMS produces.
 
 DMS writes two extra columns to every row:
-  - Op             — operation type: 'I' (insert), 'U' (update), 'D' (delete).
-                     Full-load files use Op='I' for every row because the DMS
-                     endpoint is configured with include_op_for_full_load=true.
-  - _dms_timestamp — timestamp when DMS wrote this row. Used by cdc.reconcile()
-                     to determine which version of a row is the most recent.
+  - Op: operation type: 'I' (insert), 'U' (update), 'D' (delete).
+    Full-load files use Op='I' for every row because the DMS
+    endpoint is configured with include_op_for_full_load=true.
+  - _dms_timestamp: timestamp when DMS wrote this row. Used by cdc.reconcile()
+    to determine which version of a row is the most recent.
 
 File layout produced:
     data/bronze/raw/public/customers/LOAD00000001.parquet

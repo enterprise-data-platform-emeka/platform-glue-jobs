@@ -16,9 +16,9 @@ The core challenge is CDC reconciliation. AWS DMS (Database Migration Service) w
 
 DMS writes Parquet files to S3 in two forms. On first load it writes a single full-load file containing every existing row. After that it writes CDC files, one per batch of changes, partitioned by date. Each record has three extra columns DMS adds:
 
-- `Op` — the operation type: `I` for insert, `U` for update, `D` for delete
-- `_dms_timestamp` — when DMS captured the change
-- `_dms_operation` — same as Op, written in full
+- `Op`: the operation type: `I` for insert, `U` for update, `D` for delete
+- `_dms_timestamp`: when DMS captured the change
+- `_dms_operation`: same as Op, written in full
 
 The jobs read both the full-load file and all CDC files together, sort by `_dms_timestamp`, and keep only the latest row per primary key. Deletes (Op = `D`) are filtered out. The result is identical to running `SELECT * FROM the_source_table` at the time the job runs.
 
@@ -43,15 +43,15 @@ Dimension tables are not partitioned because they are small and always read in f
 
 All six jobs share a library rather than duplicating logic.
 
-**`lib/cdc.py`** — CDC reconciliation. Uses Spark window functions to sort all rows for each primary key by `_dms_timestamp` descending, keeps the first (latest) row, and drops rows where `Op = D`. This is the core logic that turns a stream of change events into a current-state snapshot.
+**`lib/cdc.py`**: CDC reconciliation. Uses Spark window functions to sort all rows for each primary key by `_dms_timestamp` descending, keeps the first (latest) row, and drops rows where `Op = D`. This is the core logic that turns a stream of change events into a current-state snapshot.
 
-**`lib/schemas.py`** — Explicit PySpark StructType definitions for every Bronze table. DMS writes Parquet with its own type inference, which sometimes produces unexpected types. Defining schemas explicitly ensures the jobs read Bronze with the correct types regardless of what DMS chose.
+**`lib/schemas.py`**: Explicit PySpark StructType definitions for every Bronze table. DMS writes Parquet with its own type inference, which sometimes produces unexpected types. Defining schemas explicitly ensures the jobs read Bronze with the correct types regardless of what DMS chose.
 
-**`lib/validation.py`** — Data quality validation. Each job defines a list of SQL-style boolean rules (for example, `customer_id IS NOT NULL` or `unit_price > 0`). The validation library evaluates every rule against every row and splits the DataFrame into two: valid rows that pass all rules, and invalid rows that fail at least one. Invalid rows get a `_validation_errors` column listing which rules they failed, then go to the Quarantine bucket. Nothing is silently dropped.
+**`lib/validation.py`**: Data quality validation. Each job defines a list of SQL-style boolean rules (for example, `customer_id IS NOT NULL` or `unit_price > 0`). The validation library evaluates every rule against every row and splits the DataFrame into two: valid rows that pass all rules, and invalid rows that fail at least one. Invalid rows get a `_validation_errors` column listing which rules they failed, then go to the Quarantine bucket. Nothing is silently dropped.
 
-**`lib/paths.py`** — Path resolution for Bronze, Silver, and Quarantine locations. Handles both `file://` paths for local Docker runs and `s3://` paths for AWS. The job code never has conditionals for local vs cloud: it just calls `paths.bronze()` and gets the right path for the environment.
+**`lib/paths.py`**: Path resolution for Bronze, Silver, and Quarantine locations. Handles both `file://` paths for local Docker runs and `s3://` paths for AWS. The job code never has conditionals for local vs cloud: it just calls `paths.bronze()` and gets the right path for the environment.
 
-**`lib/job_utils.py`** — Glue job lifecycle helpers. Initializes the Glue context and job, and commits the job bookmark on success. Handles the case where the Glue context is not available (local Docker run) without crashing.
+**`lib/job_utils.py`**: Glue job lifecycle helpers. Initializes the Glue context and job, and commits the job bookmark on success. Handles the case where the Glue context is not available (local Docker run) without crashing.
 
 ---
 

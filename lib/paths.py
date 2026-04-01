@@ -7,7 +7,7 @@ at runtime: --BRONZE_PATH, --SILVER_PATH, and --QUARANTINE_PATH.
 Locally these are file:// paths pointing to data/ inside the Docker container.
 In AWS they are s3:// paths pointing to the real S3 buckets.
 
-The job code never needs to know which environment it's in — the only thing
+The job code never needs to know which environment it's in. The only thing
 that changes between local and AWS is the value of these three parameters.
 
 Local example:

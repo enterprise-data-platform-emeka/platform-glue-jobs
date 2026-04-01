@@ -34,7 +34,7 @@ Validation rules:
     - shipped_month must not be null
     - delivery_days must be >= 0 when not null (delivered_date >= shipped_date)
 
-Derived column — delivery_days:
+Derived column, delivery_days:
     The number of calendar days between shipped_date and delivered_date.
     Null when the shipment has not yet been delivered (delivery_status != 'delivered').
     This is a pre-computed metric rather than a raw timestamp pair so that dbt
@@ -93,7 +93,7 @@ current_df = reconcile(bronze_df, pk_col="shipment_id")
 #
 # Compute delivery_days as a pre-aggregated metric. datediff() returns an
 # integer (number of whole calendar days). It returns null when delivered_date
-# is null (i.e. the shipment has not been delivered yet), which is correct —
+# is null (i.e. the shipment has not been delivered yet), which is correct.
 # we do not want to impute a delivery time for in-flight shipments.
 #
 # Partition by shipped_year and shipped_month so Athena can push down a date

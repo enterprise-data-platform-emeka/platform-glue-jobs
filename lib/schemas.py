@@ -2,11 +2,11 @@
 Spark schema definitions for the Bronze tables.
 
 DMS adds two extra columns to every row it writes:
-  - Op            STRING  — the operation type: 'I' (insert), 'U' (update), 'D' (delete).
-                            Even full-load files have Op='I' on every row because we set
-                            include_op_for_full_load=true in the DMS endpoint configuration.
-  - _dms_timestamp TIMESTAMP — when DMS wrote this row. Used for CDC reconciliation:
-                            we sort by this column to determine which version of a row is latest.
+  - Op STRING: the operation type: 'I' (insert), 'U' (update), 'D' (delete).
+    Even full-load files have Op='I' on every row because we set
+    include_op_for_full_load=true in the DMS endpoint configuration.
+  - _dms_timestamp TIMESTAMP: when DMS wrote this row. Used for CDC reconciliation:
+    we sort by this column to determine which version of a row is latest.
 
 These two columns appear first, followed by the original table columns in their
 PostgreSQL definition order.

@@ -3,7 +3,7 @@ Glue Job lifecycle helpers.
 
 job.init() and job.commit() serve two purposes in AWS Glue:
   1. Register the job run with the Glue service (for monitoring in the console).
-  2. Save/load the job bookmark — the cursor that tells Glue which S3 files
+  2. Save/load the job bookmark, the cursor that tells Glue which S3 files
      have already been processed so incremental jobs skip them.
 
 Both require AWS credentials and a reachable Glue service endpoint. When

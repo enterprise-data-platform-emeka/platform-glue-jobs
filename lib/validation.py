@@ -9,7 +9,7 @@ every rule the row failed.
 This means Silver always contains clean, trustworthy data. Quarantine
 captures everything that didn't make the cut so nothing is silently lost.
 
-Rules are expressed as Spark SQL boolean expressions — the same syntax
+Rules are expressed as Spark SQL boolean expressions, the same syntax
 you'd use in a DataFrame.filter() or WHERE clause. A rule passes when
 the expression evaluates to True.
 
@@ -77,13 +77,13 @@ def validate(
     # Cache annotated so that Spark does not re-execute the input DAG for both
     # the valid write path and the quarantine write path. Without caching,
     # each downstream action (quarantine_df.write and the caller's Silver write)
-    # independently triggers the full plan — Bronze read + CDC window function +
-    # check column expressions — from scratch.
+    # independently triggers the full plan: Bronze read + CDC window function +
+    # check column expressions, from scratch.
     #
     # We do NOT call unpersist() here. validate() returns valid_df as a lazy
     # DataFrame; the caller triggers the Silver write after this function returns.
     # If we called unpersist() before returning, annotated would be gone by the
-    # time the caller writes, and Spark would re-execute the full DAG anyway —
+    # time the caller writes, and Spark would re-execute the full DAG anyway,
     # defeating the cache entirely. Glue jobs are short-lived; Spark releases all
     # cached data automatically when the job completes.
     annotated.cache()
@@ -95,7 +95,7 @@ def validate(
 
     # Build a human-readable _validation_errors column that names every rule
     # the row failed, then write invalid rows to quarantine.
-    # The write() call is the only action we trigger on this path — no
+    # The write() call is the only action we trigger on this path, no
     # separate count() needed to guard it, because writing an empty DataFrame
     # is a no-op for Parquet (Spark writes zero files and exits cleanly).
     # This write also materialises the annotated cache so the Silver write

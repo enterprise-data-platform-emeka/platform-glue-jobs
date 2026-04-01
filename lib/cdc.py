@@ -3,11 +3,11 @@ CDC (Change Data Capture) reconciliation.
 
 DMS writes two kinds of files to the Bronze S3 bucket:
 
-  1. Full-load file — LOAD00000001.parquet
+  1. Full-load file: LOAD00000001.parquet
      Written once when DMS first copies the entire table. Every row has Op='I'.
      This is the starting state.
 
-  2. CDC files — raw/public/<table>/YYYY/MM/DD/YYYYMMDD-HHmmss-ttt.parquet
+  2. CDC files: raw/public/<table>/YYYY/MM/DD/YYYYMMDD-HHmmss-ttt.parquet
      Written continuously as rows change in PostgreSQL. Each file contains a mix
      of Op='I' (new rows), Op='U' (updated rows), and Op='D' (deleted rows).
 
@@ -16,7 +16,7 @@ To reconstruct the current state of a table we:
   2. Sort by _dms_timestamp ascending so earlier events come first.
   3. For each primary key, keep only the most recent row (window function).
   4. Discard rows where the most recent operation was 'D' (the row was deleted).
-  5. Drop the Op and _dms_timestamp columns — downstream jobs don't need them.
+  5. Drop the Op and _dms_timestamp columns, as downstream jobs don't need them.
 
 The result is a clean snapshot of every row that currently exists in the source
 table, identical to what you'd get from SELECT * on the live PostgreSQL.
@@ -75,7 +75,7 @@ def reconcile(df: DataFrame, pk_col: str) -> DataFrame:
         .drop("_row_num")
         # Discard rows whose most recent event was a delete.
         .filter(F.col("Op") != "D")
-        # Remove CDC metadata — downstream Silver tables don't need these.
+        # Remove CDC metadata, as downstream Silver tables don't need these.
         .drop("Op", "_dms_timestamp")
     )
 

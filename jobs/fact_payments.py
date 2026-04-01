@@ -6,7 +6,7 @@ state of every payment, validates data quality, and writes the clean fact table
 to Silver partitioned by payment date.
 
 One payment exists per order. Payments are the financial record of the platform
-— the amount column is what we aggregate when calculating revenue.
+the amount column is what we aggregate when calculating revenue.
 
 Input (Bronze):
     {BRONZE_PATH}/raw/public/payments/
@@ -84,7 +84,7 @@ current_df = reconcile(bronze_df, pk_col="payment_id")
 #
 # Derive payment_year and payment_month for partitioning. This aligns with
 # fact_orders and fact_order_items so dbt/Athena can join across them using
-# the same partition filter — a query for "January 2024 revenue" scans the
+# the same partition filter. A query for "January 2024 revenue" scans the
 # same partition in all three fact tables.
 
 fact_df = current_df.select(

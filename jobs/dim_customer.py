@@ -76,7 +76,7 @@ current_df = reconcile(bronze_df, pk_col="customer_id")
 
 # ── Select Silver columns ─────────────────────────────────────────────────────
 #
-# Drop updated_at — it's a technical audit column we don't need in Silver.
+# Drop updated_at, it's a technical audit column we don't need in Silver.
 # The business columns are what matter in the dimension table.
 
 dim_df = current_df.select(
@@ -104,7 +104,7 @@ clean_df = validate(dim_df, RULES, paths.quarantine_root, "dim_customer")
 # ── Write Silver ──────────────────────────────────────────────────────────────
 #
 # Overwrite mode replaces the previous run's output. dim_customer is a full
-# snapshot of the current state — there's no concept of incremental appends here.
+# snapshot of the current state, there's no concept of incremental appends here.
 
 silver_path = paths.silver_table("dim_customer")
 print(f"[dim_customer] Writing Silver to {silver_path}")
