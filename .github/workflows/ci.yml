@@ -11,10 +11,18 @@ name: CI
 # successfully on main, ensuring no broken code reaches dev.
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'data/**'
+      - 'lib.zip'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'data/**'
+      - 'lib.zip'
 
 jobs:
   # ── Lint and type check ──────────────────────────────────────────────────────

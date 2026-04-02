@@ -165,4 +165,30 @@ make test-coverage  # run tests with coverage report
 
 ## CI/CD
 
-Every push runs the full test suite, ruff linting, and mypy type checking in GitHub Actions. On merge to main, job scripts are deployed to the S3 Glue scripts bucket in the dev environment automatically via OIDC authentication (no long-lived AWS credentials stored in GitHub).
+CI skips runs triggered by README or fixture data changes. Only source code changes (`jobs/`, `lib/`, `scripts/`, `tests/`, config files) trigger the pipeline.
+
+### On every pull request and push to main
+
+Three gate jobs run in parallel:
+
+| Job | What it checks |
+|---|---|
+| Lint and type check | ruff (style) + mypy (types) on `scripts/` |
+| Unit tests | pytest unit tests with coverage report |
+| Security scan | bandit scans `jobs/`, `lib/`, `scripts/` for MEDIUM and HIGH severity issues |
+
+If all three pass, a fourth job runs:
+
+| Job | What it checks |
+|---|---|
+| Glue integration | Runs all six Silver PySpark jobs inside the real AWS Glue 4.0 Docker image against locally generated Bronze Parquet files |
+
+The integration job is the only one that proves the Spark logic works end-to-end. It only starts once the gate jobs pass so the 3 GB Glue image is not pulled on a lint failure.
+
+### On merge to main
+
+The deploy workflow triggers automatically after CI completes successfully. It uploads all six `jobs/*.py` scripts and `lib.zip` to the S3 (Simple Storage Service) Glue scripts bucket in dev, then creates or updates the Glue job definitions via the AWS CLI. Authentication uses OIDC (OpenID Connect), no long-lived AWS credentials are stored anywhere.
+
+### Promotion to staging and prod
+
+Trigger the Deploy workflow manually from GitHub Actions, choose the target environment. GitHub Environment protection rules require reviewer approval for staging and prod before the job runs.
