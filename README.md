@@ -129,7 +129,9 @@ make typecheck
 
 ## Running against AWS
 
-Jobs are deployed to AWS Glue as Glue jobs with the script uploaded to S3. The MWAA (Amazon Managed Workflows for Apache Airflow) DAG triggers them on schedule. You can also trigger a job manually:
+Jobs are deployed to AWS Glue as Glue jobs with the script uploaded to S3.
+
+![All six edp-dev Glue ETL jobs deployed in AWS Glue Studio running Glue 4.0](images/glue-etl-jobs.png) The MWAA (Amazon Managed Workflows for Apache Airflow) DAG triggers them on schedule. You can also trigger a job manually:
 
 ```bash
 # Deploy all job scripts to S3
