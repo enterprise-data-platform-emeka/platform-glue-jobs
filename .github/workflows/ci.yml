@@ -72,6 +72,37 @@ jobs:
           file: ./coverage.xml
           fail_ci_if_error: false
 
+  # ── Security scan ────────────────────────────────────────────────────────────
+  # bandit scans Python source for common security issues (SQL injection,
+  # shell injection, hardcoded credentials, unsafe deserialization, etc.).
+  # MEDIUM and HIGH severity findings fail the build.
+  # LOW findings are informational only (-ll flag).
+  #
+  # Runs in parallel with quality and unit-tests. glue-integration only starts
+  # once all three gate jobs pass.
+  security:
+    name: Security scan (bandit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install bandit
+        run: pip install bandit
+
+      - name: Scan Python source
+        # -ll reports MEDIUM and HIGH severity issues only.
+        # Scan jobs/, lib/, and scripts/ — the production Python code.
+        # Exclude tests/ as test code has different security expectations.
+        run: bandit -r jobs/ lib/ scripts/ -ll
+
   # ── Glue integration tests ───────────────────────────────────────────────────
   # Runs all 6 Silver PySpark jobs inside the real AWS Glue Docker image.
   # This is the only job that proves the actual Spark logic works end-to-end.
@@ -79,12 +110,12 @@ jobs:
   # The image (~3 GB) is cached between runs using GitHub Actions cache.
   # First pull: ~2-3 minutes. Subsequent runs with cache hit: ~30 seconds.
   #
-  # Only runs after quality and unit-tests pass to avoid wasting time
-  # pulling a large Docker image when there are already lint/test failures.
+  # Only runs after quality, unit-tests, and security pass to avoid wasting
+  # time pulling a large Docker image when there are already failures.
   glue-integration:
     name: Glue integration (Spark)
     runs-on: ubuntu-latest
-    needs: [quality, unit-tests]
+    needs: [quality, unit-tests, security]
 
     steps:
       - name: Checkout
