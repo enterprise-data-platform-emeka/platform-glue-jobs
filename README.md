@@ -158,12 +158,35 @@ All Silver tables are written as Parquet with Snappy compression. Fact tables ar
 
 ## Tests
 
-Tests use pytest and run against local Parquet files. No AWS credentials needed. The test suite covers CDC reconciliation edge cases (multiple updates for the same key, mixed insert/update/delete sequences), validation rule evaluation, schema enforcement, and path resolution.
+Tests use pytest and run against locally generated Parquet files. No AWS credentials are needed. The test suite covers CDC reconciliation edge cases (multiple updates for the same key, mixed insert/update/delete sequences), validation rule evaluation, schema enforcement, and path resolution.
+
+**Unit tests** check the logic around the Spark jobs: path resolution, CDC reconciliation rules, and validation logic. These are plain Python functions that run in milliseconds with no Spark cluster.
+
+**Integration tests** run the actual PySpark scripts inside the official AWS Glue 4.0 Docker image, the exact same runtime used in production. There is no cluster: the Docker image includes a local Spark session. The test generates small Bronze Parquet files in memory, runs each job, and checks the Silver output matches what is expected.
+
+There are no CSV fixture files because CSV doesn't preserve Parquet column types cleanly. Generating Parquet directly means the test data always matches the exact schema the jobs expect.
 
 ```bash
 make test           # run all tests
 make test-coverage  # run tests with coverage report
 ```
+
+```mermaid
+flowchart TD
+    A[Push to GitHub] --> B[Three gate jobs run in parallel]
+    B --> C[Lint and type check\nruff + mypy]
+    B --> D[Unit tests\nPath logic and CDC rules\nNo Spark needed]
+    B --> E[Security scan\nbandit checks for vulnerabilities]
+    C --> F{All three pass?}
+    D --> F
+    E --> F
+    F -->|No| G[Pipeline stops here]
+    F -->|Yes| H[Glue integration test\nRuns all 6 PySpark jobs inside\nthe real AWS Glue 4.0 Docker image\nagainst generated Bronze Parquet files]
+    H -->|Pass| I[Deploy workflow triggers\nUploads jobs to S3]
+    H -->|Fail| J[Pipeline stops here]
+```
+
+The integration job pulls a 3 GB Docker image so it only runs after the gate jobs pass. There is no point pulling a large image if a simple lint error would have caught the problem.
 
 ---
 
