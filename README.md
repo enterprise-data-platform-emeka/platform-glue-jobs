@@ -2,6 +2,8 @@
 
 This repository is part of the [Enterprise Data Platform](https://github.com/enterprise-data-platform-emeka/platform-docs). For the full project overview, architecture diagram, and build order, start there.
 
+**Previous:** [platform-cdc-simulator](https://github.com/enterprise-data-platform-emeka/platform-cdc-simulator): the simulator generates the PostgreSQL OLTP traffic that DMS captures and lands in the Bronze S3 layer as Parquet CDC files that these jobs read.
+
 ---
 
 ## What this repository does
@@ -194,3 +196,7 @@ The deploy workflow triggers automatically after CI completes successfully. It u
 ### Promotion to staging and prod
 
 Trigger the Deploy workflow manually from GitHub Actions, choose the target environment. GitHub Environment protection rules require reviewer approval for staging and prod before the job runs.
+
+---
+
+**Next:** [platform-dbt-analytics](https://github.com/enterprise-data-platform-emeka/platform-dbt-analytics): with Silver tables populated, dbt SQL models aggregate them into the Gold business tables (revenue trends, product performance, customer acquisition, and more) that power the analytics agent.
