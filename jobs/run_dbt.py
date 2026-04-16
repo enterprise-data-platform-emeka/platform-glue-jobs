@@ -66,31 +66,40 @@ ARTIFACT_S3_PREFIX = "metadata/dbt/"
 
 
 def download_dbt_project() -> None:
-    """Download the dbt project from S3 to /tmp/dbt_workspace.
+    """Download the dbt project from S3 to /tmp/dbt_workspace using boto3.
 
-    The session orchestrator syncs the project to
-    s3://{bronze_bucket}/dbt/platform-dbt-analytics/ before triggering
-    Step Functions. This function mirrors that content locally so dbt
-    can run without network access to the source repo.
+    Uses boto3 directly instead of shelling out to the AWS CLI. This is
+    more reliable inside Glue Python Shell because it uses the job's IAM
+    role natively and surfaces real error messages on failure.
     """
     print(f"Downloading dbt project from s3://{BRONZE_BUCKET}/{DBT_S3_PREFIX}")
 
     if os.path.exists(DBT_WORKSPACE):
         shutil.rmtree(DBT_WORKSPACE)
+    os.makedirs(DBT_WORKSPACE)
 
-    result = subprocess.run(
-        [
-            "aws", "s3", "sync",
-            f"s3://{BRONZE_BUCKET}/{DBT_S3_PREFIX}",
-            DBT_WORKSPACE,
-            "--region", AWS_DEFAULT_REGION,
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    print(result.stdout)
-    print(f"dbt project downloaded to {DBT_WORKSPACE}")
+    s3 = boto3.client("s3", region_name=AWS_DEFAULT_REGION)
+    paginator = s3.get_paginator("list_objects_v2")
+    count = 0
+
+    for page in paginator.paginate(Bucket=BRONZE_BUCKET, Prefix=DBT_S3_PREFIX):
+        for obj in page.get("Contents", []):
+            key = obj["Key"]
+            relative_path = key[len(DBT_S3_PREFIX):]
+            if not relative_path:
+                continue
+            local_path = os.path.join(DBT_WORKSPACE, relative_path)
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            s3.download_file(BRONZE_BUCKET, key, local_path)
+            count += 1
+
+    if count == 0:
+        raise RuntimeError(
+            f"No files found at s3://{BRONZE_BUCKET}/{DBT_S3_PREFIX}. "
+            "Run the sync-dbt step in the session-start workflow before triggering the pipeline."
+        )
+
+    print(f"Downloaded {count} files to {DBT_WORKSPACE}")
 
 
 def run_dbt_command(command: list[str]) -> None:
