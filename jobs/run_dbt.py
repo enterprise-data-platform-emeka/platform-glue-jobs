@@ -105,12 +105,13 @@ def download_dbt_project() -> None:
 def run_dbt_command(command: list[str]) -> None:
     """Run a dbt command as a subprocess.
 
-    Uses `python -m dbt` to ensure the dbt installed by
-    --additional-python-modules is used, regardless of PATH.
-    Streams stdout/stderr directly so CloudWatch captures all output.
+    Uses the dbt CLI binary installed alongside sys.executable by
+    --additional-python-modules. dbt has no __main__ so python -m dbt
+    does not work in Glue Python Shell.
     """
+    dbt_bin = os.path.join(os.path.dirname(sys.executable), "dbt")
     full_command = [
-        sys.executable, "-m", "dbt",
+        dbt_bin,
         *command,
         "--target", DBT_TARGET,
         "--profiles-dir", DBT_PROFILES_DIR,
