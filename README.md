@@ -173,17 +173,17 @@ make test-coverage  # run tests with coverage report
 
 ```mermaid
 flowchart TD
-    A[Push to GitHub] --> B[Three gate jobs run in parallel]
+    A[Push to GitHub] -->|triggers CI| B[Three gate jobs run in parallel\nfast checks before the slow one]
     B --> C[Lint and type check\nruff + mypy]
     B --> D[Unit tests\nPath logic and CDC rules\nNo Spark needed]
-    B --> E[Security scan\nbandit checks for vulnerabilities]
+    B --> E[Security scan\nbandit — medium and high severity]
     C --> F{All three pass?}
     D --> F
     E --> F
-    F -->|No| G[Pipeline stops here]
-    F -->|Yes| H[Glue integration test\nRuns all 6 PySpark jobs inside\nthe real AWS Glue 4.0 Docker image\nagainst generated Bronze Parquet files]
-    H -->|Pass| I[Deploy workflow triggers\nUploads jobs to S3]
-    H -->|Fail| J[Pipeline stops here]
+    F -->|No — fix before continuing| G[Pipeline stops here\nDeploy is blocked]
+    F -->|Yes — gate checks pass| H[Glue integration test\nRuns all 6 PySpark jobs inside\nthe real AWS Glue 4.0 Docker image\nagainst generated Bronze Parquet files\n3 GB image only pulled after gate passes]
+    H -->|All 6 jobs produce correct Silver output| I[Deploy workflow triggers\nUploads job scripts and lib.zip to S3\nUpdates Glue job definitions via AWS CLI]
+    H -->|Fail — Spark logic error| J[Pipeline stops here\nDeploy is blocked]
 ```
 
 The integration job pulls a 3 GB Docker image so it only runs after the gate jobs pass. There is no point pulling a large image if a simple lint error would have caught the problem.
