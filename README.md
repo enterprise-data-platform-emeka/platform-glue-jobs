@@ -55,6 +55,8 @@ All six jobs share a library rather than duplicating logic.
 
 **`lib/job_utils.py`**: Glue job lifecycle helpers. Initializes the Glue context and job, and commits the job bookmark on success. Handles the case where the Glue context is not available (local Docker run) without crashing.
 
+**`lib/freshness.py`**: Data freshness metric publisher. Each job captures `max(_dms_timestamp)` from the Bronze DataFrame before `cdc.reconcile()` runs (reconcile drops that column from its output). It computes how many hours that timestamp sits behind a fixed reference date of `2026-03-02 23:59:59 UTC` — the latest date present in the Bronze dataset — and publishes that value as a custom CloudWatch metric called `SilverDataAgeHours` in the `EDP/DataFreshness` namespace. A value near zero means the data reached the expected cutoff. A large positive value means the data is stale relative to the cutoff. The publish call is wrapped in `try/except` so local Docker runs are unaffected when no AWS credentials are present.
+
 ---
 
 ## Validation and quarantine
@@ -83,7 +85,8 @@ platform-glue-jobs/
 │   ├── schemas.py
 │   ├── validation.py
 │   ├── paths.py
-│   └── job_utils.py
+│   ├── job_utils.py
+│   └── freshness.py         ← CloudWatch data freshness metric publisher
 ├── scripts/
 │   └── generate_bronze.py     ← generates test Bronze Parquet files locally
 ├── tests/
@@ -147,6 +150,26 @@ make status JOB=dim_customer ENV=dev
 ```
 
 The jobs read from the Bronze bucket and write to the Silver bucket. Both bucket names and paths are passed as Glue job parameters, so the same script runs in dev, staging, and prod without code changes.
+
+---
+
+## Data freshness monitoring
+
+Each Silver job publishes a custom CloudWatch metric after it finishes writing. The metric answers: "How close to the expected data cutoff did this job get?"
+
+The reference date is `2026-03-02 23:59:59 UTC`, the latest date present in the Bronze dataset. Before CDC reconciliation runs (which drops `_dms_timestamp`), each job captures `max(_dms_timestamp)` from the raw Bronze DataFrame. It then computes:
+
+```
+age_hours = (reference_date - max_dms_timestamp) / 3600
+```
+
+A value of zero means the data reached exactly the reference cutoff. A value of 10 means the latest Bronze record arrived 10 hours before the reference. A value above 24 triggers the CloudWatch alarm `edp-dev-silver-{table}-stale` (defined in the `monitoring` Terraform module).
+
+| Metric | Namespace | Dimensions |
+|---|---|---|
+| `SilverDataAgeHours` | `EDP/DataFreshness` | `Table`, `Environment` |
+
+The metric is published via boto3. In local Docker runs the publish is skipped silently because no AWS credentials are present. The Glue IAM role has `cloudwatch:PutMetricData` scoped to the `EDP/DataFreshness` namespace.
 
 ---
 
