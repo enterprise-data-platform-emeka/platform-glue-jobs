@@ -51,6 +51,7 @@ from pyspark.context import SparkContext
 from pyspark.sql import functions as F
 
 from lib.cdc import reconcile
+from lib.freshness import publish_freshness_metric
 from lib.job_utils import commit_job, init_job
 from lib.paths import resolve_paths
 from lib.schemas import ORDER_ITEMS_SCHEMA, ORDERS_SCHEMA
@@ -76,6 +77,8 @@ print(f"[fact_order_items] Reading Bronze order_items from {paths.bronze_table('
 bronze_items_df = spark.read.schema(ORDER_ITEMS_SCHEMA).parquet(
     paths.bronze_table("order_items")
 )
+
+max_dms_ts = bronze_items_df.agg(F.max("_dms_timestamp")).collect()[0][0]
 
 # ── Read Bronze: orders (for order_date) ──────────────────────────────────────
 #
@@ -164,4 +167,5 @@ print(f"[fact_order_items] Writing Silver to {silver_path}")
 clean_df.write.mode("overwrite").partitionBy("order_year", "order_month").parquet(silver_path)
 print("[fact_order_items] Done.")
 
+publish_freshness_metric("fact_order_items", max_dms_ts, args["JOB_NAME"])
 commit_job(job)

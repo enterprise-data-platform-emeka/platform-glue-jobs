@@ -39,8 +39,10 @@ from awsglue.context import GlueContext
 from awsglue.job import Job
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
+from pyspark.sql import functions as F
 
 from lib.cdc import reconcile
+from lib.freshness import publish_freshness_metric
 from lib.job_utils import commit_job, init_job
 from lib.paths import resolve_paths
 from lib.schemas import PRODUCTS_SCHEMA
@@ -64,6 +66,8 @@ paths = resolve_paths(args)
 
 print(f"[dim_product] Reading Bronze from {paths.bronze_table('products')}")
 bronze_df = spark.read.schema(PRODUCTS_SCHEMA).parquet(paths.bronze_table("products"))
+
+max_dms_ts = bronze_df.agg(F.max("_dms_timestamp")).collect()[0][0]
 
 # ── CDC reconciliation ────────────────────────────────────────────────────────
 
@@ -100,4 +104,5 @@ print(f"[dim_product] Writing Silver to {silver_path}")
 clean_df.write.mode("overwrite").parquet(silver_path)
 print("[dim_product] Done.")
 
+publish_freshness_metric("dim_product", max_dms_ts, args["JOB_NAME"])
 commit_job(job)

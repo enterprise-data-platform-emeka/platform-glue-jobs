@@ -57,6 +57,7 @@ from pyspark.context import SparkContext
 from pyspark.sql import functions as F
 
 from lib.cdc import reconcile
+from lib.freshness import publish_freshness_metric
 from lib.job_utils import commit_job, init_job
 from lib.paths import resolve_paths
 from lib.schemas import SHIPMENTS_SCHEMA
@@ -80,6 +81,8 @@ paths = resolve_paths(args)
 
 print(f"[fact_shipments] Reading Bronze from {paths.bronze_table('shipments')}")
 bronze_df = spark.read.schema(SHIPMENTS_SCHEMA).parquet(paths.bronze_table("shipments"))
+
+max_dms_ts = bronze_df.agg(F.max("_dms_timestamp")).collect()[0][0]
 
 # ── CDC reconciliation ────────────────────────────────────────────────────────
 #
@@ -139,4 +142,5 @@ print(f"[fact_shipments] Writing Silver to {silver_path}")
 clean_df.write.mode("overwrite").partitionBy("shipped_year", "shipped_month").parquet(silver_path)
 print("[fact_shipments] Done.")
 
+publish_freshness_metric("fact_shipments", max_dms_ts, args["JOB_NAME"])
 commit_job(job)
