@@ -63,7 +63,7 @@ All six jobs share a library rather than duplicating logic.
 
 Every job applies validation rules specific to its table. A customer record fails if `customer_id` is null or empty. An order record fails if `order_status` is not one of the known valid states. A payment record fails if `amount` is negative.
 
-Valid records go to Silver. Invalid records go to Quarantine with a `_validation_errors` column. This means data quality problems are visible and fixable: you can query Quarantine to see exactly which records failed and why, fix the upstream issue, and re-run the job.
+Valid records go to Silver. Invalid records go to Quarantine with a `_validation_errors` column. This means data quality problems are visible and fixable: I can query Quarantine to see exactly which records failed and why, fix the upstream issue, and re-run the job.
 
 The Quarantine bucket is in a separate S3 location from Silver so invalid data can never accidentally be queried as if it were clean.
 
