@@ -92,3 +92,52 @@ def publish_freshness_metric(
             f"[freshness] {table_name}: CloudWatch publish skipped (local mode or no credentials): {exc}",
             file=sys.stderr,
         )
+
+
+_ROW_COUNT_NAMESPACE = "EDP/DataQuality"
+_ROW_COUNT_METRIC = "SilverRowCount"
+
+
+def publish_row_count_metric(
+    table_name: str,
+    row_count: int,
+    job_name: str,
+) -> None:
+    """
+    Publish Silver output row count to CloudWatch after each Glue job write.
+
+    The DAG validation task (validate_silver_row_counts) reads this metric to
+    confirm every Silver table received rows in the current pipeline run. Using
+    CloudWatch avoids a separate Athena COUNT(*) scan at validation time.
+
+    Namespace:  EDP/DataQuality
+    MetricName: SilverRowCount
+    Unit:       Count
+    Dimensions: Table={table_name}, Environment={dev|staging|prod}
+    Value:      Number of rows written to Silver in this job run.
+    """
+    try:
+        import boto3
+
+        environment = job_name.split("-")[1] if "-" in job_name else "unknown"
+
+        boto3.client("cloudwatch").put_metric_data(
+            Namespace=_ROW_COUNT_NAMESPACE,
+            MetricData=[
+                {
+                    "MetricName": _ROW_COUNT_METRIC,
+                    "Value": float(row_count),
+                    "Unit": "Count",
+                    "Dimensions": [
+                        {"Name": "Table", "Value": table_name},
+                        {"Name": "Environment", "Value": environment},
+                    ],
+                }
+            ],
+        )
+        print(f"[row-count] {table_name}: {row_count:,} rows published to CloudWatch")
+    except Exception as exc:
+        print(
+            f"[row-count] {table_name}: CloudWatch publish skipped (local mode or no credentials): {exc}",
+            file=sys.stderr,
+        )

@@ -49,7 +49,7 @@ from pyspark.context import SparkContext
 from pyspark.sql import functions as F
 
 from lib.cdc import reconcile
-from lib.freshness import publish_freshness_metric
+from lib.freshness import publish_freshness_metric, publish_row_count_metric
 from lib.job_utils import commit_job, init_job
 from lib.paths import resolve_paths
 from lib.schemas import PAYMENTS_SCHEMA
@@ -121,8 +121,12 @@ clean_df = validate(fact_df, RULES, paths.quarantine_root, "fact_payments")
 
 silver_path = paths.silver_table("fact_payments")
 print(f"[fact_payments] Writing Silver to {silver_path}")
+clean_df.cache()
+silver_row_count = clean_df.count()
 clean_df.write.mode("overwrite").partitionBy("payment_year", "payment_month").parquet(silver_path)
-print("[fact_payments] Done.")
+clean_df.unpersist()
+print(f"[fact_payments] Done. {silver_row_count:,} rows written.")
 
+publish_row_count_metric("fact_payments", silver_row_count, args["JOB_NAME"])
 publish_freshness_metric("fact_payments", max_dms_ts, args["JOB_NAME"])
 commit_job(job)

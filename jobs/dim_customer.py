@@ -41,7 +41,7 @@ from pyspark.context import SparkContext
 from pyspark.sql import functions as F
 
 from lib.cdc import reconcile
-from lib.freshness import publish_freshness_metric
+from lib.freshness import publish_freshness_metric, publish_row_count_metric
 from lib.job_utils import commit_job, init_job
 from lib.paths import resolve_paths
 from lib.schemas import CUSTOMERS_SCHEMA
@@ -112,8 +112,12 @@ clean_df = validate(dim_df, RULES, paths.quarantine_root, "dim_customer")
 
 silver_path = paths.silver_table("dim_customer")
 print(f"[dim_customer] Writing Silver to {silver_path}")
+clean_df.cache()
+silver_row_count = clean_df.count()
 clean_df.write.mode("overwrite").parquet(silver_path)
-print("[dim_customer] Done.")
+clean_df.unpersist()
+print(f"[dim_customer] Done. {silver_row_count:,} rows written.")
 
+publish_row_count_metric("dim_customer", silver_row_count, args["JOB_NAME"])
 publish_freshness_metric("dim_customer", max_dms_ts, args["JOB_NAME"])
 commit_job(job)
