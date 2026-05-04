@@ -246,3 +246,49 @@ Trigger the Deploy workflow manually from GitHub Actions, choose the target envi
 ---
 
 **Next:** [platform-dbt-analytics](https://github.com/enterprise-data-platform-emeka/platform-dbt-analytics): with Silver tables populated, dbt SQL models aggregate them into the Gold business tables (revenue trends, product performance, customer acquisition, and more) that power the analytics agent.
+
+---
+
+## Enterprise qualities
+
+### Data integrity
+
+Bad data in Silver means bad analytics in Gold. I enforce integrity at three levels.
+
+The first is **row-level validation**: every job applies named SQL rules (null checks, type guards) to `clean_df`. Rows that fail go to a quarantine S3 bucket with an error-reason column, not silently dropped. Operators can inspect and replay quarantined rows without re-running the full job.
+
+The second is **row count telemetry**: after each Silver write, the job publishes `SilverRowCount` to CloudWatch (`EDP/DataQuality` namespace). The DAG validation task reads this metric without scanning S3, catching silent row loss before the Crawler or dbt run spends time on bad data. The `cache()` + `count()` pattern before the write means Spark materialises the DataFrame once, sharing it between the count and the write rather than doing two full passes.
+
+The third is **schema enforcement**: each job reads Bronze with a fully typed Spark schema. If a source column changes type or disappears, the job fails at read time with a clear error rather than producing corrupted Silver output.
+
+**Not yet implemented:** Glue job bookmarks (E2). If a job is retried by MWAA or Step Functions, it currently re-processes all Bronze files and overwrites Silver with the same data. Enabling `--job-bookmark-option: job-bookmark-enable` would make retries idempotent. Also not implemented: Glue Schema Registry (D1), which would detect upstream schema changes before the job even starts.
+
+---
+
+### Observability
+
+Each job publishes two CloudWatch custom metrics on every run:
+
+- `EDP/DataFreshness / SilverDataAgeHours` (per table, per environment): hours between the latest Bronze timestamp and the reference cutoff date. The monitoring module raises an alarm if this exceeds 24 hours.
+- `EDP/DataQuality / SilverRowCount` (per table, per environment): number of rows written to Silver. Zero rows trigger a pipeline failure in the DAG validation gate.
+
+Both metrics use standard (1-minute) resolution and cost nothing to query once published.
+
+---
+
+### Performance and scalability
+
+Silver tables are partitioned by year and month. Athena queries downstream only scan the partitions they need, not the full table. A query for "revenue this month" touches one partition regardless of how many years of history are in Silver.
+
+The six jobs run fully in parallel inside both the Step Functions state machine and the MWAA DAG. They read from independent Bronze prefixes and write to independent Silver prefixes with no cross-job dependencies.
+
+Each job runs on Glue G.1X workers (2 vCPU, 8 GB each). The number of workers auto-scales based on the input data size.
+
+---
+
+### Security
+
+- Glue VPC connection: jobs run inside the private VPC with no public internet access.
+- KMS encryption: the Glue security configuration encrypts job bookmarks, CloudWatch logs, and S3 output using the platform KMS key.
+- IAM least privilege: the shared Glue IAM role has read access on Bronze and Quarantine, write access on Silver and Quarantine, and CloudWatch PutMetricData. Nothing else.
+- Quarantine data is isolated from Silver by S3 prefix. Downstream tools cannot accidentally query it alongside clean data.
