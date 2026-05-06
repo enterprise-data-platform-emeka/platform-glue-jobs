@@ -13,16 +13,30 @@ name: CI
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'data/**'
-      - 'lib.zip'
+    paths:
+      - 'jobs/**'
+      - 'lib/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'Makefile'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'data/**'
-      - 'lib.zip'
+    paths:
+      - 'jobs/**'
+      - 'lib/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'Makefile'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - '.github/workflows/**'
 
 jobs:
   # ── Lint and type check ──────────────────────────────────────────────────────

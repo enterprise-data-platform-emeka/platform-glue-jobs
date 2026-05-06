@@ -235,9 +235,9 @@ If all three pass, a fourth job runs:
 
 The integration job is the only one that proves the Spark logic works end-to-end. It only starts once the gate jobs pass so the 3 GB Glue image is not pulled on a lint failure.
 
-### On merge to main
+### After CI passes on main
 
-The deploy workflow triggers automatically after CI completes successfully. It uploads all six `jobs/*.py` scripts and `lib.zip` to the S3 (Simple Storage Service) Glue scripts bucket in dev, then creates or updates the Glue job definitions via the AWS CLI. Authentication uses OIDC (OpenID Connect), no long-lived AWS credentials are stored anywhere.
+Trigger the deploy workflow manually from GitHub Actions and choose the target environment. It uploads all six `jobs/*.py` scripts and `lib.zip` to the S3 (Simple Storage Service) Glue scripts bucket, then creates or updates the Glue job definitions via the AWS CLI. Authentication uses OIDC (OpenID Connect), no long-lived AWS credentials are stored anywhere.
 
 ### Promotion to staging and prod
 

@@ -8,10 +8,9 @@ name: Deploy
 #   3. Create or update the Glue job definitions via the AWS CLI
 #
 # Triggers:
-#   - push to main    → automatically deploys to dev
-#   - workflow_dispatch → manually deploys to staging or prod
+#   - workflow_dispatch → manually deploys to the selected environment
 #
-# Promotion path: dev (auto) → staging (manual) → prod (manual + approval)
+# Promotion path: dev (manual) → staging (manual) → prod (manual + approval)
 #
 # AWS authentication uses OIDC (no long-lived access keys).
 # Required IAM role: edp-{env}-github-actions-role
@@ -24,30 +23,19 @@ name: Deploy
 #     prod    — add required reviewers + deployment protection rules
 
 on:
-  # Triggers only after CI completes successfully on main.
-  # This ensures all Glue integration tests pass before any deployment.
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-    branches: [main]
-
   workflow_dispatch:
     inputs:
       environment:
         description: "Target environment"
         required: true
         type: choice
-        options: [staging, prod]
+        options: [dev, staging, prod]
 
 jobs:
   deploy:
     name: Deploy to ${{ inputs.environment || 'dev' }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment || 'dev' }}
-    # When triggered by workflow_run, only proceed if CI actually passed.
-    # workflow_dispatch bypasses this check (manual deploys are intentional).
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-
     permissions:
       id-token: write
       contents: read
