@@ -81,7 +81,7 @@ _SILVER_TO_STAGING = {
 }
 
 DBT_S3_PREFIX    = "dbt/platform-dbt-analytics/"
-DBT_WORKSPACE    = "/tmp/dbt_workspace"
+DBT_WORKSPACE    = "/tmp/dbt_workspace"  # nosec B108 — /tmp is the only writable path in Glue workers
 DBT_PROFILES_DIR = f"{DBT_WORKSPACE}/profiles"
 ARTIFACT_S3_PREFIX = "metadata/dbt/"
 
