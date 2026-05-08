@@ -261,7 +261,7 @@ The second is **row count telemetry**: after each Silver write, the job publishe
 
 The third is **schema enforcement**: each job reads Bronze with a fully typed Spark schema. If a source column changes type or disappears, the job fails at read time with a clear error rather than producing corrupted Silver output.
 
-**Not yet implemented:** Glue job bookmarks (E2). If a job is retried by MWAA or Step Functions, it currently re-processes all Bronze files and overwrites Silver with the same data. Enabling `--job-bookmark-option: job-bookmark-enable` would make retries idempotent. Also not implemented: Glue Schema Registry (D1), which would detect upstream schema changes before the job even starts.
+**Job bookmarks are intentionally disabled.** Each job does full CDC reconciliation on every run — it reads all Bronze files, applies deduplication and null filtering, and overwrites Silver with the canonical result. Bookmarks track file offsets for incremental processing, which conflicts with this design: if a bookmark skipped an already-processed Bronze file, the deduplication pass would miss it and Silver could contain stale or duplicate rows. Re-processing all Bronze on every run is the correct behaviour given the CDC source. Also not implemented: Glue Schema Registry (D1), which would detect upstream schema changes before the job even starts.
 
 ---
 
