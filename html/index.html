@@ -1,277 +1,1051 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>platform-glue-jobs — Visual README</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>platform-glue-jobs | Visual README</title>
   <style>
     :root {
-      --accent: #2563eb;
+      --ink: #101828;
+      --muted: #667085;
+      --quiet: #98a2b3;
+      --page: #f6f8fb;
+      --surface: rgba(255,255,255,.92);
+      --surface-strong: #ffffff;
+      --line: #d8e2ef;
+      --blue: #2563eb;
+      --blue-soft: #eaf2ff;
       --teal: #0f766e;
-      --violet: #7c3aed;
-      --ink: #0f172a;
-      --muted: #526175;
-      --page: #f5f8fb;
-      --surface: rgba(255,255,255,0.9);
-      --soft: #eef4fa;
-      --line: #d6e0ec;
-      --shadow: 0 22px 70px rgba(15,23,42,0.11);
+      --teal-soft: #e7f6f3;
+      --olive: #556b2f;
+      --olive-soft: #f1f5e9;
+      --amber: #b7791f;
+      --amber-soft: #fff6df;
+      --rose: #b42318;
+      --rose-soft: #fff0ef;
+      --slate: #334155;
+      --shadow: 0 24px 80px rgba(16,24,40,.12);
+      --soft-shadow: 0 12px 34px rgba(16,24,40,.08);
     }
+
     * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
     body {
       margin: 0;
       color: var(--ink);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        linear-gradient(rgba(37,99,235,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(37,99,235,0.035) 1px, transparent 1px),
-        radial-gradient(circle at 8% 0%, rgba(37,99,235,0.16), transparent 34rem),
-        radial-gradient(circle at 92% 8%, rgba(15,118,110,0.13), transparent 32rem),
+        linear-gradient(rgba(37,99,235,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,.035) 1px, transparent 1px),
+        radial-gradient(circle at 12% -8%, rgba(37,99,235,.14), transparent 32rem),
+        radial-gradient(circle at 92% 4%, rgba(15,118,110,.12), transparent 30rem),
+        radial-gradient(circle at 56% 110%, rgba(85,107,47,.10), transparent 36rem),
         var(--page);
-      background-size: 44px 44px, 44px 44px, auto, auto, auto;
+      background-size: 44px 44px, 44px 44px, auto, auto, auto, auto;
     }
-    a { color: var(--accent); text-decoration: none; }
+
+    a { color: inherit; text-decoration: none; }
+
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 20;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      padding: 0.85rem 1.4rem;
+      padding: .85rem 1.25rem;
       border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,0.88);
+      background: rgba(255,255,255,.88);
       backdrop-filter: blur(18px);
     }
-    .brand { display: flex; align-items: center; gap: 0.75rem; font-weight: 950; }
-    .mark { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), var(--teal)); color: #fff; box-shadow: 0 14px 28px rgba(37,99,235,0.25); font-size: 0.78rem; }
-    .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-    .nav a { padding: 0.52rem 0.78rem; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,0.82); color: var(--muted); font-weight: 850; font-size: 0.86rem; }
-    .wrap { width: min(1240px, calc(100vw - 2rem)); margin: 0 auto; padding: 1.2rem 0 4rem; }
-    .hero { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(280px,0.65fr); gap: 1rem; margin: 1rem 0; }
-    .hero-card, .panel, .diagram-card, .concept-card, .section-tile {
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .72rem;
+      min-width: 0;
+      font-weight: 950;
+      letter-spacing: -.02em;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: #fff;
+      font-size: .78rem;
+      font-weight: 950;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      box-shadow: 0 14px 32px rgba(37,99,235,.28);
+    }
+
+    .brand span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      padding: .55rem .8rem;
       border: 1px solid var(--line);
-      border-radius: 24px;
+      border-radius: 999px;
+      color: #344054;
+      background: rgba(255,255,255,.78);
+      font-size: .84rem;
+      font-weight: 850;
+      box-shadow: 0 8px 18px rgba(16,24,40,.04);
+    }
+
+    .nav a:hover {
+      border-color: #b8cdf0;
+      color: var(--blue);
+      background: #fff;
+    }
+
+    .wrap {
+      width: min(1320px, calc(100vw - 2rem));
+      margin: 0 auto;
+      padding: 1.25rem 0 4rem;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr);
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 28px;
       background: var(--surface);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
+      overflow: hidden;
     }
-    .hero-card { padding: 2.1rem; background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(15,118,110,0.06) 45%, rgba(255,255,255,0.96)); }
-    .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.72rem; font-weight: 950; }
-    h1 { margin: 0.45rem 0 0.75rem; font-size: clamp(2.2rem,5vw,4.5rem); line-height: 0.95; letter-spacing: -0.045em; }
-    h2 { margin: 0.35rem 0 0.7rem; font-size: clamp(1.35rem,3vw,2.1rem); letter-spacing: -0.035em; }
-    h3 { margin: 0; font-size: 1.02rem; }
-    p { color: var(--muted); line-height: 1.58; }
-    .tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
-    .tags span { padding: 0.45rem 0.68rem; border-radius: 999px; border: 1px solid rgba(37,99,235,0.22); background: rgba(37,99,235,0.07); font-size: 0.83rem; font-weight: 850; color: #1f2937; }
-    .stats { display: grid; gap: 0.75rem; padding: 1rem; }
-    .metric { padding: 0.95rem; border: 1px solid var(--line); border-radius: 16px; background: var(--soft); }
-    .metric span { display: block; color: var(--muted); font-size: 0.76rem; font-weight: 850; }
-    .metric strong { display: block; margin-top: 0.25rem; font-size: 1.55rem; }
-    .diagram-card { margin: 1rem 0; overflow-x: auto; background: #fff; }
-    .diagram-card header { padding: 1.1rem 1.2rem 0; }
-    .diagram-card svg { display: block; min-width: 980px; width: 100%; height: auto; }
-    .diagram-heading { fill: var(--ink); font-size: 24px; font-weight: 950; }
-    .diagram-subtitle { fill: var(--muted); font-size: 14px; }
-    .arch-node, .flow-node, .actor-box { fill: #fff; stroke: #bfdbfe; stroke-width: 1.5; }
-    .arch-node.active { stroke: var(--accent); stroke-width: 3; filter: drop-shadow(0 8px 18px rgba(37,99,235,0.24)); }
-    .node-title, .actor-label { fill: var(--ink); font-size: 13px; font-weight: 900; }
-    .node-sub { fill: var(--muted); font-size: 11px; font-weight: 750; }
-    .layer-label { fill: #334155; font-size: 12px; font-weight: 900; }
-    .swimlane { stroke: #bfdbfe; stroke-width: 2; }
-    .flow-arrow .hit { stroke: transparent; stroke-width: 18; fill: none; pointer-events: stroke; }
-    .flow-arrow .line { fill: none; stroke: #334155; stroke-width: 2.4; marker-end: url(#arrow-dark); transition: stroke .18s ease, stroke-width .18s ease, filter .18s ease; }
-    .flow-arrow.accent .line { stroke: var(--accent); marker-end: url(#arrow-accent); }
-    .flow-arrow.return .line { stroke: #64748b; stroke-dasharray: 6 6; }
-    .flow-arrow:hover .line { stroke: var(--accent); stroke-width: 4; stroke-dasharray: 12 8; animation: flowDash .8s linear infinite; filter: drop-shadow(0 0 8px rgba(37,99,235,.62)); marker-end: url(#arrow-accent); }
-    .flow-arrow text { fill: var(--ink); font-size: 12px; font-weight: 820; pointer-events: none; }
-    .flow-arrow:hover text { fill: var(--accent); font-weight: 950; }
-    @keyframes flowDash { to { stroke-dashoffset: -40; } }
-    .explain { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; padding: 0 1.2rem 1.2rem; }
-    .explain div, .concept-card { padding: .95rem; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.86); box-shadow: none; }
-    .explain strong, .concept-card h3 { display: block; margin-bottom: .28rem; }
-    .explain span, .concept-card p { color: var(--muted); font-size: .9rem; line-height: 1.45; }
-    .concept-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; margin: 1rem 0; }
-    .mini-flow { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; margin: .85rem 0; }
-    .mini-node { padding: .42rem .58rem; border: 1px solid var(--line); border-radius: 12px; background: #fff; font-size: .78rem; font-weight: 850; }
-    .mini-arrow { color: var(--accent); font-weight: 950; }
-    .sections { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .85rem; margin-top: 1rem; }
-    .section-tile { padding: .95rem; box-shadow: none; display: flex; gap: .75rem; align-items: center; }
-    .section-tile span { color: var(--accent); font-size: .82rem; font-weight: 950; }
-    .section-tile strong { line-height: 1.3; }
-    .footer { color: var(--muted); text-align: center; font-size: .9rem; margin-top: 1.4rem; }
-    @media (max-width: 900px) {
-      .topbar { flex-direction: column; align-items: flex-start; }
-      .hero, .concept-grid, .sections, .explain { grid-template-columns: 1fr; }
-      .diagram-card svg { min-width: 920px; }
+
+    .hero-main {
+      padding: clamp(1.4rem, 4vw, 2.4rem);
+      background:
+        linear-gradient(135deg, rgba(37,99,235,.10), rgba(15,118,110,.07) 48%, rgba(255,255,255,.95)),
+        #fff;
+    }
+
+    .eyebrow {
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: .72rem;
+      font-weight: 950;
+    }
+
+    h1 {
+      margin: .42rem 0 .78rem;
+      font-size: clamp(2.4rem, 6vw, 5.2rem);
+      line-height: .92;
+      letter-spacing: -.06em;
+      max-width: 860px;
+    }
+
+    h2 {
+      margin: .35rem 0 .75rem;
+      font-size: clamp(1.55rem, 3vw, 2.5rem);
+      line-height: 1.02;
+      letter-spacing: -.045em;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: -.02em;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .hero-main p {
+      max-width: 780px;
+      font-size: 1.04rem;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: 1.15rem;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .44rem .68rem;
+      border: 1px solid rgba(37,99,235,.22);
+      border-radius: 999px;
+      background: rgba(37,99,235,.07);
+      color: #1d2939;
+      font-size: .82rem;
+      font-weight: 850;
+    }
+
+    .quick-stats {
+      display: grid;
+      gap: .72rem;
+      padding: 1rem;
+    }
+
+    .metric {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 1rem;
+      padding: .95rem 1rem;
+      border: 1px solid #d9e4f3;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #fff, #edf4fc);
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .metric strong {
+      font-size: 1.45rem;
+      line-height: 1;
+    }
+
+    .diagram-card {
+      margin: 1rem 0;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(255,255,255,.94);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .diagram-head {
+      padding: 1.25rem 1.35rem .3rem;
+    }
+
+    .svg-frame {
+      overflow-x: auto;
+      padding: .25rem;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-width: 980px;
+      height: auto;
+    }
+
+    .diagram-note {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .75rem;
+      padding: .2rem 1.25rem 1.25rem;
+    }
+
+    .note {
+      padding: .95rem;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(248,251,255,.88);
+      box-shadow: 0 10px 26px rgba(16,24,40,.04);
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: .25rem;
+      color: var(--ink);
+    }
+
+    .note span {
+      display: block;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.48;
+    }
+
+    .node {
+      fill: #fff;
+      stroke: #bfd5f3;
+      stroke-width: 1.6;
+      filter: drop-shadow(0 8px 16px rgba(16,24,40,.08));
+    }
+
+    .node-blue { fill: var(--blue-soft); stroke: #9cc2ff; }
+    .node-teal { fill: var(--teal-soft); stroke: #86d7cd; }
+    .node-olive { fill: var(--olive-soft); stroke: #bdcda0; }
+    .node-amber { fill: var(--amber-soft); stroke: #f4c77a; }
+    .node-rose { fill: var(--rose-soft); stroke: #f2aaa5; }
+    .node-dark { fill: #172033; stroke: #172033; }
+
+    .title {
+      fill: var(--ink);
+      font-size: 15px;
+      font-weight: 950;
+    }
+
+    .small-title {
+      fill: var(--ink);
+      font-size: 12.5px;
+      font-weight: 950;
+    }
+
+    .sub {
+      fill: var(--muted);
+      font-size: 11.2px;
+      font-weight: 760;
+    }
+
+    .tiny {
+      fill: var(--muted);
+      font-size: 10px;
+      font-weight: 750;
+    }
+
+    .white-text { fill: #fff; }
+
+    .lane {
+      stroke: #c9dcf6;
+      stroke-width: 2;
+    }
+
+    .label-pill {
+      fill: rgba(255,255,255,.9);
+      stroke: #cfe0f5;
+      stroke-width: 1.3;
+    }
+
+    .pill-text {
+      fill: #344054;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .flow .hit {
+      fill: none;
+      stroke: transparent;
+      stroke-width: 20;
+      pointer-events: stroke;
+    }
+
+    .flow .line {
+      fill: none;
+      stroke: #344054;
+      stroke-width: 2.5;
+      marker-end: url(#arrow-slate);
+      transition: stroke .16s ease, stroke-width .16s ease, filter .16s ease;
+    }
+
+    .flow.blue .line {
+      stroke: var(--blue);
+      marker-end: url(#arrow-blue);
+    }
+
+    .flow.teal .line {
+      stroke: var(--teal);
+      marker-end: url(#arrow-teal);
+    }
+
+    .flow.olive .line {
+      stroke: var(--olive);
+      marker-end: url(#arrow-olive);
+    }
+
+    .flow.return .line {
+      stroke: #667085;
+      stroke-dasharray: 7 7;
+    }
+
+    .flow:hover .line {
+      stroke: var(--blue);
+      stroke-width: 4.2;
+      stroke-dasharray: 13 8;
+      animation: dash 800ms linear infinite;
+      filter: drop-shadow(0 0 9px rgba(37,99,235,.68));
+      marker-end: url(#arrow-blue);
+    }
+
+    .flow text {
+      fill: #1d2939;
+      font-size: 12px;
+      font-weight: 850;
+      pointer-events: none;
+    }
+
+    .flow:hover text {
+      fill: var(--blue);
+      font-weight: 950;
+    }
+
+    @keyframes dash { to { stroke-dashoffset: -42; } }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .concept {
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255,255,255,.88);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .concept h3 {
+      margin-bottom: .45rem;
+    }
+
+    .concept p {
+      font-size: .94rem;
+    }
+
+    .mini-flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .42rem;
+      margin: .72rem 0 .82rem;
+    }
+
+    .mini-node {
+      padding: .42rem .58rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: #344054;
+      font-size: .78rem;
+      font-weight: 850;
+    }
+
+    .mini-arrow {
+      color: var(--blue);
+      font-weight: 950;
+    }
+
+    .repo-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem;
+      margin-top: 1rem;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: .7rem .95rem;
+      border-radius: 14px;
+      border: 1px solid #bdcbe0;
+      background: #fff;
+      color: #344054;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(16,24,40,.07);
+    }
+
+    .button.primary {
+      color: #fff;
+      border-color: #1d4ed8;
+      background: linear-gradient(135deg, #2563eb, #0f766e);
+    }
+
+    .footer {
+      margin-top: 2rem;
+      color: var(--muted);
+      text-align: center;
+      font-size: .9rem;
+    }
+
+    @media (max-width: 960px) {
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .nav { justify-content: flex-start; }
+      .hero, .diagram-note, .grid { grid-template-columns: 1fr; }
+      svg { min-width: 900px; }
+      .wrap { width: min(100% - 1rem, 1320px); }
+    }
+
+    @media (max-width: 560px) {
+      .topbar { padding: .7rem .85rem; }
+      .nav a { font-size: .78rem; padding: .48rem .66rem; }
+      .diagram-head { padding: 1rem 1rem .1rem; }
+      .diagram-note { padding: .15rem 1rem 1rem; }
+      h1 { font-size: clamp(2.2rem, 15vw, 3.4rem); }
     }
   </style>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><div class="mark">EDP</div><span>platform-glue-jobs</span></div>
-    <nav class="nav">
+    <a class="brand" href="https://github.com/enterprise-data-platform-emeka/platform-glue-jobs">
+      <span class="brand-mark">EDP</span>
+      <span>platform-glue-jobs</span>
+    </a>
+    <nav class="nav" aria-label="Page navigation">
       <a href="https://github.com/enterprise-data-platform-emeka/platform-glue-jobs/blob/main/README.md">README.md</a>
-      <a href="#architecture">Architecture</a>
-      <a href="#repo-flow">Repo Flow</a>
-      <a href="#concepts">Concepts</a>
+      <a href="#platform">Platform</a>
+      <a href="#cdc">CDC</a>
+      <a href="#jobs">Six jobs</a>
+      <a href="#quality">Quality</a>
+      <a href="#ci">CI/CD</a>
     </nav>
   </header>
+
   <main class="wrap">
     <section class="hero">
-      <div class="hero-card">
-        <div class="eyebrow">Visual README</div>
-        <h1>platform-glue-jobs</h1>
-        <p>Six AWS Glue PySpark jobs that reconcile raw Bronze CDC files into clean Silver star-schema tables.</p>
-        <div class="tags"><span>Glue</span><span>PySpark</span><span>CDC reconciliation</span><span>Silver schema</span><span>Quarantine</span></div>
+      <div class="card hero-main">
+        <div class="eyebrow">AWS Glue PySpark transformation layer</div>
+        <h1>Bronze change events become trusted Silver tables.</h1>
+        <p>
+          This repository owns the transformation layer between raw DMS files and the analytics-ready Silver schema.
+          It reads full-load plus CDC Parquet files, resolves the latest current-state row, validates data quality,
+          isolates bad records, and publishes operational evidence.
+        </p>
+        <div class="tags">
+          <span class="tag">Glue 4.0</span>
+          <span class="tag">PySpark</span>
+          <span class="tag">CDC reconciliation</span>
+          <span class="tag">Quarantine</span>
+          <span class="tag">CloudWatch metrics</span>
+          <span class="tag">Silver star schema</span>
+        </div>
       </div>
-      <aside class="panel stats">
-        <div class="metric"><span>README lines</span><strong>296</strong></div>
-        <div class="metric"><span>Major sections</span><strong>13</strong></div>
-        <div class="metric"><span>Code examples</span><strong>6</strong></div>
-        <div class="metric"><span>Table rows</span><strong>19</strong></div>
+      <aside class="card quick-stats">
+        <div class="metric"><span>Jobs</span><strong>6</strong></div>
+        <div class="metric"><span>Shared libraries</span><strong>6</strong></div>
+        <div class="metric"><span>Output layer</span><strong>Silver</strong></div>
+        <div class="metric"><span>Failure path</span><strong>Quarantine</strong></div>
       </aside>
     </section>
 
-    <section class="diagram-card" id="architecture">
-      <header>
-        <div class="eyebrow">End-to-end architecture</div>
-        <h2>Where this repo sits in the full platform</h2>
-      </header>
-      
-      <svg viewBox="0 0 1230 500" role="img" aria-label="End-to-end Enterprise Data Platform architecture">
-        <defs>
-          <marker id="arrow-dark" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
-          <marker id="arrow-accent" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
-        </defs>
-        <rect x="0" y="0" width="1230" height="500" rx="28" fill="#f8fbff"/>
-        <text x="40" y="44" class="diagram-heading">Complete platform path</text>
-        <text x="40" y="70" class="diagram-subtitle">Source changes become trusted Gold marts, then three stakeholder frontends use the same governed analytics backend.</text>
-        <g><rect class="arch-node" x="55" y="84" width="130" height="68" rx="16"/><text x="120" y="114" text-anchor="middle" class="node-title">PostgreSQL</text><text x="120" y="134" text-anchor="middle" class="node-sub">Source OLTP</text></g><g><rect class="arch-node" x="220" y="84" width="130" height="68" rx="16"/><text x="285" y="114" text-anchor="middle" class="node-title">DMS CDC</text><text x="285" y="134" text-anchor="middle" class="node-sub">Change capture</text></g><g><rect class="arch-node" x="385" y="84" width="130" height="68" rx="16"/><text x="450" y="114" text-anchor="middle" class="node-title">Bronze S3</text><text x="450" y="134" text-anchor="middle" class="node-sub">Raw events</text></g><g><rect class="arch-node active" x="550" y="84" width="130" height="68" rx="16"/><text x="615" y="114" text-anchor="middle" class="node-title">Glue PySpark</text><text x="615" y="134" text-anchor="middle" class="node-sub">Clean + reconcile</text></g><g><rect class="arch-node" x="715" y="84" width="130" height="68" rx="16"/><text x="780" y="114" text-anchor="middle" class="node-title">Silver S3</text><text x="780" y="134" text-anchor="middle" class="node-sub">Star schema</text></g><g><rect class="arch-node" x="880" y="84" width="130" height="68" rx="16"/><text x="945" y="114" text-anchor="middle" class="node-title">dbt / Athena</text><text x="945" y="134" text-anchor="middle" class="node-sub">Gold models</text></g><g><rect class="arch-node" x="1045" y="84" width="130" height="68" rx="16"/><text x="1110" y="114" text-anchor="middle" class="node-title">Gold S3</text><text x="1110" y="134" text-anchor="middle" class="node-sub">Business marts</text></g><g><rect class="arch-node" x="545" y="260" width="130" height="68" rx="16"/><text x="610" y="290" text-anchor="middle" class="node-title">FastAPI Agent</text><text x="610" y="310" text-anchor="middle" class="node-sub">SQL + guardrails</text></g><g><rect class="arch-node" x="280" y="390" width="130" height="68" rx="16"/><text x="345" y="420" text-anchor="middle" class="node-title">Streamlit UI</text><text x="345" y="440" text-anchor="middle" class="node-sub">Current UI</text></g><g><rect class="arch-node" x="545" y="390" width="130" height="68" rx="16"/><text x="610" y="420" text-anchor="middle" class="node-title">HTML Dashboard</text><text x="610" y="440" text-anchor="middle" class="node-sub">Custom UI</text></g><g><rect class="arch-node" x="810" y="390" width="130" height="68" rx="16"/><text x="875" y="420" text-anchor="middle" class="node-title">Slack MCP</text><text x="875" y="440" text-anchor="middle" class="node-sub">Chat entry</text></g>
-        <g class="flow-arrow"><path class="hit" d="M185 118 L220 118"/><path class="line" d="M185 118 L220 118"/></g><g class="flow-arrow"><path class="hit" d="M350 118 L385 118"/><path class="line" d="M350 118 L385 118"/></g><g class="flow-arrow"><path class="hit" d="M515 118 L550 118"/><path class="line" d="M515 118 L550 118"/></g><g class="flow-arrow"><path class="hit" d="M680 118 L715 118"/><path class="line" d="M680 118 L715 118"/></g><g class="flow-arrow"><path class="hit" d="M845 118 L880 118"/><path class="line" d="M845 118 L880 118"/></g><g class="flow-arrow"><path class="hit" d="M1010 118 L1045 118"/><path class="line" d="M1010 118 L1045 118"/></g><g class="flow-arrow"><path class="hit" d="M1110 152 L610 260"/><path class="line" d="M1110 152 L610 260"/></g><g class="flow-arrow"><path class="hit" d="M545 328 L345 390"/><path class="line" d="M545 328 L345 390"/></g><g class="flow-arrow"><path class="hit" d="M610 328 L610 390"/><path class="line" d="M610 328 L610 390"/></g><g class="flow-arrow"><path class="hit" d="M675 328 L875 390"/><path class="line" d="M675 328 L875 390"/></g><g class="flow-arrow"><path class="hit" d="M345 390 L545 328"/><path class="line" d="M345 390 L545 328"/></g><g class="flow-arrow"><path class="hit" d="M610 390 L610 328"/><path class="line" d="M610 390 L610 328"/></g><g class="flow-arrow"><path class="hit" d="M875 390 L675 328"/><path class="line" d="M875 390 L675 328"/></g>
-        <rect x="498" y="224" width="228" height="132" rx="24" fill="rgba(37,99,235,0.06)" stroke="#bfdbfe"/>
-        <text x="612" y="242" text-anchor="middle" class="layer-label">Analytics serving layer</text>
-        <rect x="238" y="362" width="780" height="92" rx="24" fill="rgba(15,118,110,0.05)" stroke="#ccfbf1"/>
-        <text x="628" y="478" text-anchor="middle" class="layer-label">Frontends: Streamlit, custom HTML, and Slack all converge on FastAPI</text>
-      </svg>
-    
-      <div class="explain">
-        <div><strong>Data pipeline</strong><span>PostgreSQL changes are captured by DMS, stored in Bronze, cleaned by Glue, modeled by dbt, and exposed as Gold marts.</span></div>
-        <div><strong>Serving layer</strong><span>The analytics agent queries Gold data through Athena and returns governed answers with SQL, cost, and audit evidence.</span></div>
-        <div><strong>Frontends</strong><span>Streamlit, custom HTML, and Slack/MCP are separate user entry points that share the same backend contract.</span></div>
+    <section class="diagram-card" id="platform">
+      <div class="diagram-head">
+        <div class="eyebrow">Full platform context</div>
+        <h2>The Glue layer is where raw history becomes queryable structure.</h2>
+      </div>
+      <div class="svg-frame">
+        <svg viewBox="0 0 1320 560" role="img" aria-label="Enterprise Data Platform architecture with Glue layer highlighted">
+          <defs>
+            <marker id="arrow-slate" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#344054"/></marker>
+            <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0f766e"/></marker>
+            <marker id="arrow-olive" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#556b2f"/></marker>
+          </defs>
+          <rect width="1320" height="560" rx="30" fill="#fbfdff"/>
+          <text x="44" y="50" class="title" style="font-size:24px">End-to-end platform path</text>
+          <text x="44" y="78" class="sub" style="font-size:14px">Glue sits after CDC ingestion and before dbt Gold modeling. All stakeholder frontends consume the Gold layer through the same analytics backend.</text>
+
+          <g>
+            <rect class="node node-blue" x="52" y="122" width="144" height="74" rx="18"/>
+            <text x="124" y="153" text-anchor="middle" class="title">PostgreSQL</text>
+            <text x="124" y="174" text-anchor="middle" class="sub">OLTP source</text>
+          </g>
+          <g>
+            <rect class="node node-amber" x="238" y="122" width="144" height="74" rx="18"/>
+            <text x="310" y="153" text-anchor="middle" class="title">DMS CDC</text>
+            <text x="310" y="174" text-anchor="middle" class="sub">Full load + changes</text>
+          </g>
+          <g>
+            <rect class="node node-amber" x="424" y="122" width="144" height="74" rx="18"/>
+            <text x="496" y="153" text-anchor="middle" class="title">Bronze S3</text>
+            <text x="496" y="174" text-anchor="middle" class="sub">Raw Parquet events</text>
+          </g>
+          <g>
+            <rect class="node node-dark" x="610" y="104" width="174" height="110" rx="22"/>
+            <text x="697" y="145" text-anchor="middle" class="title white-text">Glue PySpark</text>
+            <text x="697" y="168" text-anchor="middle" class="sub white-text">CDC reconcile</text>
+            <text x="697" y="187" text-anchor="middle" class="sub white-text">Validate + partition</text>
+          </g>
+          <g>
+            <rect class="node node-teal" x="826" y="122" width="144" height="74" rx="18"/>
+            <text x="898" y="153" text-anchor="middle" class="title">Silver S3</text>
+            <text x="898" y="174" text-anchor="middle" class="sub">Clean star schema</text>
+          </g>
+          <g>
+            <rect class="node node-olive" x="1012" y="122" width="144" height="74" rx="18"/>
+            <text x="1084" y="153" text-anchor="middle" class="title">dbt + Athena</text>
+            <text x="1084" y="174" text-anchor="middle" class="sub">Gold models</text>
+          </g>
+          <g>
+            <rect class="node node-olive" x="1198" y="122" width="94" height="74" rx="18"/>
+            <text x="1245" y="153" text-anchor="middle" class="title">Gold</text>
+            <text x="1245" y="174" text-anchor="middle" class="sub">Marts</text>
+          </g>
+
+          <g class="flow"><path class="hit" d="M196 159 H238"/><path class="line" d="M196 159 H238"/></g>
+          <g class="flow"><path class="hit" d="M382 159 H424"/><path class="line" d="M382 159 H424"/></g>
+          <g class="flow blue"><path class="hit" d="M568 159 H610"/><path class="line" d="M568 159 H610"/><text x="589" y="147" text-anchor="middle">input</text></g>
+          <g class="flow teal"><path class="hit" d="M784 159 H826"/><path class="line" d="M784 159 H826"/><text x="805" y="147" text-anchor="middle">output</text></g>
+          <g class="flow"><path class="hit" d="M970 159 H1012"/><path class="line" d="M970 159 H1012"/></g>
+          <g class="flow olive"><path class="hit" d="M1156 159 H1198"/><path class="line" d="M1156 159 H1198"/></g>
+
+          <rect x="602" y="252" width="190" height="84" rx="20" fill="#fff" stroke="#d8e2ef"/>
+          <text x="697" y="286" text-anchor="middle" class="title">CloudWatch</text>
+          <text x="697" y="308" text-anchor="middle" class="sub">Row count + freshness</text>
+          <g class="flow return"><path class="hit" d="M697 214 V252"/><path class="line" d="M697 214 V252"/></g>
+
+          <rect x="804" y="252" width="190" height="84" rx="20" fill="#fff0ef" stroke="#f2aaa5"/>
+          <text x="899" y="286" text-anchor="middle" class="title">Quarantine S3</text>
+          <text x="899" y="308" text-anchor="middle" class="sub">Invalid rows + reasons</text>
+          <g class="flow return"><path class="hit" d="M750 214 C778 244 812 262 804 294"/><path class="line" d="M750 214 C778 244 812 262 804 294"/></g>
+
+          <rect x="472" y="400" width="180" height="78" rx="18" fill="#fff" stroke="#d8e2ef"/>
+          <text x="562" y="431" text-anchor="middle" class="title">Streamlit UI</text>
+          <text x="562" y="452" text-anchor="middle" class="sub">Current web frontend</text>
+          <rect x="700" y="400" width="180" height="78" rx="18" fill="#fff" stroke="#d8e2ef"/>
+          <text x="790" y="431" text-anchor="middle" class="title">HTML dashboard</text>
+          <text x="790" y="452" text-anchor="middle" class="sub">Custom frontend</text>
+          <rect x="928" y="400" width="180" height="78" rx="18" fill="#fff" stroke="#d8e2ef"/>
+          <text x="1018" y="431" text-anchor="middle" class="title">Slack MCP</text>
+          <text x="1018" y="452" text-anchor="middle" class="sub">Chat frontend</text>
+          <rect x="700" y="296" width="180" height="78" rx="18" fill="#eaf2ff" stroke="#9cc2ff"/>
+          <text x="790" y="327" text-anchor="middle" class="title">FastAPI Agent</text>
+          <text x="790" y="348" text-anchor="middle" class="sub">Queries Gold through Athena</text>
+          <g class="flow"><path class="hit" d="M1245 196 C1210 282 938 304 880 326"/><path class="line" d="M1245 196 C1210 282 938 304 880 326"/></g>
+          <g class="flow"><path class="hit" d="M700 334 C648 348 592 370 562 400"/><path class="line" d="M700 334 C648 348 592 370 562 400"/></g>
+          <g class="flow"><path class="hit" d="M790 374 V400"/><path class="line" d="M790 374 V400"/></g>
+          <g class="flow"><path class="hit" d="M880 334 C932 348 988 370 1018 400"/><path class="line" d="M880 334 C932 348 988 370 1018 400"/></g>
+        </svg>
+      </div>
+      <div class="diagram-note">
+        <div class="note"><strong>Why Glue matters</strong><span>Bronze contains every source change. Glue turns that noisy event history into one current, validated row per business entity.</span></div>
+        <div class="note"><strong>What it protects</strong><span>Bad types, null keys, invalid statuses, and partition mistakes stop here instead of leaking into dbt and the analytics agent.</span></div>
+        <div class="note"><strong>What comes next</strong><span>Silver becomes the stable input for dbt Gold models, which power Streamlit, HTML, and Slack analytics experiences.</span></div>
       </div>
     </section>
 
-    <section class="diagram-card" id="repo-flow">
-      <header>
-        <div class="eyebrow">Repository focus</div>
-        <h2>Bronze to Silver transformation</h2>
-      </header>
-      
-      <svg viewBox="0 0 1230 250" role="img" aria-label="Bronze to Silver transformation repository flow">
-        <defs>
-          <marker id="arrow-dark" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
-          <marker id="arrow-accent" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
-        </defs>
-        <rect x="0" y="0" width="1230" height="250" rx="28" fill="#ffffff"/>
-        <text x="40" y="46" class="diagram-heading">Bronze to Silver transformation</text>
-        <text x="40" y="72" class="diagram-subtitle">The main responsibility of this repository as a left-to-right flow.</text>
-        <g><rect class="flow-node" x="42.0" y="118" width="172.7" height="76" rx="18"/><text x="128.3" y="152" text-anchor="middle" class="node-title">Bronze Parquet CDC</text><text x="128.3" y="172" text-anchor="middle" class="node-sub">Step 1</text></g><g class="flow-arrow"><path class="hit" d="M218.7 156 H232.7"/><path class="line" d="M218.7 156 H232.7"/></g><g><rect class="flow-node" x="236.7" y="118" width="172.7" height="76" rx="18"/><text x="323.0" y="152" text-anchor="middle" class="node-title">Read full + CDC files</text><text x="323.0" y="172" text-anchor="middle" class="node-sub">Step 2</text></g><g class="flow-arrow"><path class="hit" d="M413.3 156 H427.3"/><path class="line" d="M413.3 156 H427.3"/></g><g><rect class="flow-node" x="431.3" y="118" width="172.7" height="76" rx="18"/><text x="517.7" y="152" text-anchor="middle" class="node-title">Order by DMS timestamp</text><text x="517.7" y="172" text-anchor="middle" class="node-sub">Step 3</text></g><g class="flow-arrow"><path class="hit" d="M608.0 156 H622.0"/><path class="line" d="M608.0 156 H622.0"/></g><g><rect class="flow-node" x="626.0" y="118" width="172.7" height="76" rx="18"/><text x="712.3" y="152" text-anchor="middle" class="node-title">Keep latest row</text><text x="712.3" y="172" text-anchor="middle" class="node-sub">Step 4</text></g><g class="flow-arrow"><path class="hit" d="M802.7 156 H816.7"/><path class="line" d="M802.7 156 H816.7"/></g><g><rect class="flow-node" x="820.7" y="118" width="172.7" height="76" rx="18"/><text x="907.0" y="152" text-anchor="middle" class="node-title">Validate schema</text><text x="907.0" y="172" text-anchor="middle" class="node-sub">Step 5</text></g><g class="flow-arrow"><path class="hit" d="M997.3 156 H1011.3"/><path class="line" d="M997.3 156 H1011.3"/></g><g><rect class="flow-node" x="1015.3" y="118" width="172.7" height="76" rx="18"/><text x="1101.7" y="152" text-anchor="middle" class="node-title">Silver or quarantine</text><text x="1101.7" y="172" text-anchor="middle" class="node-sub">Step 6</text></g>
-      </svg>
-    
-      <div class="explain">
-        <div><strong>Primary responsibility</strong><span>This diagram isolates the work owned by this repository from the rest of the platform.</span></div>
-        <div><strong>Input and output</strong><span>The left side shows what the repo receives; the right side shows what it hands to the next layer.</span></div>
-        <div><strong>Operational boundary</strong><span>The README has exact commands; this page shows the mental model behind those commands.</span></div>
+    <section class="diagram-card" id="cdc">
+      <div class="diagram-head">
+        <div class="eyebrow">CDC reconciliation</div>
+        <h2>Multiple Bronze events collapse into one current Silver record.</h2>
+      </div>
+      <div class="svg-frame">
+        <svg viewBox="0 0 1320 640" role="img" aria-label="CDC reconciliation flow from Bronze files to current state">
+          <defs>
+            <marker id="arrow-slate" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#344054"/></marker>
+            <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0f766e"/></marker>
+            <marker id="arrow-olive" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#556b2f"/></marker>
+          </defs>
+          <rect width="1320" height="640" rx="30" fill="#fbfdff"/>
+          <text x="44" y="52" class="title" style="font-size:24px">The core algorithm in lib/cdc.py</text>
+          <text x="44" y="80" class="sub" style="font-size:14px">DMS writes a history of changes. Spark windows sort that history newest-first per key and keep the latest non-delete row.</text>
+
+          <rect x="54" y="125" width="290" height="370" rx="24" fill="#fff6df" stroke="#f4c77a"/>
+          <text x="84" y="162" class="title">Bronze file history</text>
+          <text x="84" y="186" class="sub">Same order_id appears many times</text>
+          <g>
+            <rect class="node" x="84" y="225" width="230" height="48" rx="14"/>
+            <text x="104" y="253" class="small-title">LOAD00000001.parquet</text>
+            <text x="286" y="253" text-anchor="end" class="sub">Op=I</text>
+          </g>
+          <g>
+            <rect class="node" x="84" y="287" width="230" height="48" rx="14"/>
+            <text x="104" y="315" class="small-title">20260211-104500.parquet</text>
+            <text x="286" y="315" text-anchor="end" class="sub">Op=U</text>
+          </g>
+          <g>
+            <rect class="node" x="84" y="349" width="230" height="48" rx="14"/>
+            <text x="104" y="377" class="small-title">20260212-091000.parquet</text>
+            <text x="286" y="377" text-anchor="end" class="sub">Op=U</text>
+          </g>
+          <g>
+            <rect class="node node-rose" x="84" y="411" width="230" height="48" rx="14"/>
+            <text x="104" y="439" class="small-title">20260213-153000.parquet</text>
+            <text x="286" y="439" text-anchor="end" class="sub">Op=D</text>
+          </g>
+
+          <rect x="410" y="116" width="520" height="392" rx="26" fill="#ffffff" stroke="#d8e2ef"/>
+          <text x="448" y="155" class="title">Spark reconciliation pipeline</text>
+
+          <g>
+            <rect class="node node-blue" x="455" y="198" width="165" height="70" rx="18"/>
+            <text x="537" y="228" text-anchor="middle" class="small-title">Read all files</text>
+            <text x="537" y="249" text-anchor="middle" class="sub">LOAD + CDC</text>
+          </g>
+          <g>
+            <rect class="node node-blue" x="695" y="198" width="165" height="70" rx="18"/>
+            <text x="777" y="228" text-anchor="middle" class="small-title">Partition by key</text>
+            <text x="777" y="249" text-anchor="middle" class="sub">Window(pk)</text>
+          </g>
+          <g>
+            <rect class="node node-blue" x="455" y="332" width="165" height="70" rx="18"/>
+            <text x="537" y="362" text-anchor="middle" class="small-title">Sort newest first</text>
+            <text x="537" y="383" text-anchor="middle" class="sub">_dms_timestamp desc</text>
+          </g>
+          <g>
+            <rect class="node node-teal" x="695" y="332" width="165" height="70" rx="18"/>
+            <text x="777" y="362" text-anchor="middle" class="small-title">row_number = 1</text>
+            <text x="777" y="383" text-anchor="middle" class="sub">latest event wins</text>
+          </g>
+          <g>
+            <rect class="node node-rose" x="575" y="438" width="165" height="54" rx="18"/>
+            <text x="657" y="463" text-anchor="middle" class="small-title">Drop latest Op=D</text>
+            <text x="657" y="480" text-anchor="middle" class="sub">deleted row disappears</text>
+          </g>
+
+          <g class="flow blue"><path class="hit" d="M344 310 C380 276 410 242 455 234"/><path class="line" d="M344 310 C380 276 410 242 455 234"/></g>
+          <g class="flow"><path class="hit" d="M620 233 H695"/><path class="line" d="M620 233 H695"/></g>
+          <g class="flow"><path class="hit" d="M777 268 C777 300 680 330 620 360"/><path class="line" d="M777 268 C777 300 680 330 620 360"/></g>
+          <g class="flow"><path class="hit" d="M620 367 H695"/><path class="line" d="M620 367 H695"/></g>
+          <g class="flow"><path class="hit" d="M746 402 C720 423 692 434 667 438"/><path class="line" d="M746 402 C720 423 692 434 667 438"/></g>
+
+          <rect x="995" y="125" width="270" height="370" rx="24" fill="#e7f6f3" stroke="#86d7cd"/>
+          <text x="1025" y="162" class="title">Silver current state</text>
+          <text x="1025" y="186" class="sub">Clean snapshot for analytics</text>
+          <rect class="node" x="1025" y="230" width="210" height="58" rx="16"/>
+          <text x="1130" y="255" text-anchor="middle" class="small-title">order_id = 1008</text>
+          <text x="1130" y="275" text-anchor="middle" class="sub">latest non-delete row</text>
+          <rect class="node node-rose" x="1025" y="315" width="210" height="58" rx="16"/>
+          <text x="1130" y="340" text-anchor="middle" class="small-title">order_id = 1009</text>
+          <text x="1130" y="360" text-anchor="middle" class="sub">deleted, not written</text>
+          <rect class="node node-teal" x="1025" y="400" width="210" height="58" rx="16"/>
+          <text x="1130" y="425" text-anchor="middle" class="small-title">one row per key</text>
+          <text x="1130" y="445" text-anchor="middle" class="sub">ready for validation</text>
+
+          <g class="flow teal"><path class="hit" d="M860 367 C915 360 948 330 995 288"/><path class="line" d="M860 367 C915 360 948 330 995 288"/></g>
+        </svg>
+      </div>
+      <div class="diagram-note">
+        <div class="note"><strong>Full-load plus CDC</strong><span>The job reads every file, not only the newest batch, because the correct answer depends on the complete change history for each key.</span></div>
+        <div class="note"><strong>Why bookmarks stay off</strong><span>Skipping older files would break reconciliation. The jobs overwrite Silver from a full canonical pass each run.</span></div>
+        <div class="note"><strong>Delete handling</strong><span>A row whose latest event is `D` is absent from Silver, matching the current state of the source table.</span></div>
+      </div>
+    </section>
+
+    <section class="diagram-card" id="jobs">
+      <div class="diagram-head">
+        <div class="eyebrow">Six parallel jobs</div>
+        <h2>Each entity has one focused PySpark job and one Silver output.</h2>
+      </div>
+      <div class="svg-frame">
+        <svg viewBox="0 0 1320 620" role="img" aria-label="Six Glue jobs and their Silver outputs">
+          <defs>
+            <marker id="arrow-slate" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#344054"/></marker>
+            <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0f766e"/></marker>
+            <marker id="arrow-olive" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#556b2f"/></marker>
+          </defs>
+          <rect width="1320" height="620" rx="30" fill="#fbfdff"/>
+          <text x="44" y="52" class="title" style="font-size:24px">The six transformation lanes</text>
+          <text x="44" y="80" class="sub" style="font-size:14px">The jobs can run in parallel because each owns an independent Bronze prefix and Silver target.</text>
+
+          <rect x="48" y="122" width="300" height="420" rx="26" fill="#fff6df" stroke="#f4c77a"/>
+          <text x="198" y="157" text-anchor="middle" class="title">Bronze source tables</text>
+          <rect x="510" y="122" width="300" height="420" rx="26" fill="#eaf2ff" stroke="#9cc2ff"/>
+          <text x="660" y="157" text-anchor="middle" class="title">Glue job scripts</text>
+          <rect x="972" y="122" width="300" height="420" rx="26" fill="#e7f6f3" stroke="#86d7cd"/>
+          <text x="1122" y="157" text-anchor="middle" class="title">Silver output tables</text>
+
+          <g>
+            <rect class="node" x="88" y="190" width="220" height="42" rx="13"/><text x="198" y="216" text-anchor="middle" class="small-title">customers</text>
+            <rect class="node node-blue" x="550" y="190" width="220" height="42" rx="13"/><text x="660" y="216" text-anchor="middle" class="small-title">dim_customer.py</text>
+            <rect class="node node-teal" x="1012" y="190" width="220" height="42" rx="13"/><text x="1122" y="216" text-anchor="middle" class="small-title">dim_customer</text>
+            <g class="flow"><path class="hit" d="M308 211 H550"/><path class="line" d="M308 211 H550"/></g><g class="flow teal"><path class="hit" d="M770 211 H1012"/><path class="line" d="M770 211 H1012"/></g>
+          </g>
+          <g>
+            <rect class="node" x="88" y="250" width="220" height="42" rx="13"/><text x="198" y="276" text-anchor="middle" class="small-title">products</text>
+            <rect class="node node-blue" x="550" y="250" width="220" height="42" rx="13"/><text x="660" y="276" text-anchor="middle" class="small-title">dim_product.py</text>
+            <rect class="node node-teal" x="1012" y="250" width="220" height="42" rx="13"/><text x="1122" y="276" text-anchor="middle" class="small-title">dim_product</text>
+            <g class="flow"><path class="hit" d="M308 271 H550"/><path class="line" d="M308 271 H550"/></g><g class="flow teal"><path class="hit" d="M770 271 H1012"/><path class="line" d="M770 271 H1012"/></g>
+          </g>
+          <g>
+            <rect class="node" x="88" y="310" width="220" height="42" rx="13"/><text x="198" y="336" text-anchor="middle" class="small-title">orders</text>
+            <rect class="node node-blue" x="550" y="310" width="220" height="42" rx="13"/><text x="660" y="336" text-anchor="middle" class="small-title">fact_orders.py</text>
+            <rect class="node node-teal" x="1012" y="310" width="220" height="42" rx="13"/><text x="1122" y="336" text-anchor="middle" class="small-title">fact_orders</text>
+            <g class="flow"><path class="hit" d="M308 331 H550"/><path class="line" d="M308 331 H550"/></g><g class="flow teal"><path class="hit" d="M770 331 H1012"/><path class="line" d="M770 331 H1012"/></g>
+          </g>
+          <g>
+            <rect class="node" x="88" y="370" width="220" height="42" rx="13"/><text x="198" y="396" text-anchor="middle" class="small-title">order_items + orders</text>
+            <rect class="node node-blue" x="550" y="370" width="220" height="42" rx="13"/><text x="660" y="396" text-anchor="middle" class="small-title">fact_order_items.py</text>
+            <rect class="node node-teal" x="1012" y="370" width="220" height="42" rx="13"/><text x="1122" y="396" text-anchor="middle" class="small-title">fact_order_items</text>
+            <g class="flow"><path class="hit" d="M308 391 H550"/><path class="line" d="M308 391 H550"/></g><g class="flow teal"><path class="hit" d="M770 391 H1012"/><path class="line" d="M770 391 H1012"/></g>
+          </g>
+          <g>
+            <rect class="node" x="88" y="430" width="220" height="42" rx="13"/><text x="198" y="456" text-anchor="middle" class="small-title">payments</text>
+            <rect class="node node-blue" x="550" y="430" width="220" height="42" rx="13"/><text x="660" y="456" text-anchor="middle" class="small-title">fact_payments.py</text>
+            <rect class="node node-teal" x="1012" y="430" width="220" height="42" rx="13"/><text x="1122" y="456" text-anchor="middle" class="small-title">fact_payments</text>
+            <g class="flow"><path class="hit" d="M308 451 H550"/><path class="line" d="M308 451 H550"/></g><g class="flow teal"><path class="hit" d="M770 451 H1012"/><path class="line" d="M770 451 H1012"/></g>
+          </g>
+          <g>
+            <rect class="node" x="88" y="490" width="220" height="42" rx="13"/><text x="198" y="516" text-anchor="middle" class="small-title">shipments</text>
+            <rect class="node node-blue" x="550" y="490" width="220" height="42" rx="13"/><text x="660" y="516" text-anchor="middle" class="small-title">fact_shipments.py</text>
+            <rect class="node node-teal" x="1012" y="490" width="220" height="42" rx="13"/><text x="1122" y="516" text-anchor="middle" class="small-title">fact_shipments</text>
+            <g class="flow"><path class="hit" d="M308 511 H550"/><path class="line" d="M308 511 H550"/></g><g class="flow teal"><path class="hit" d="M770 511 H1012"/><path class="line" d="M770 511 H1012"/></g>
+          </g>
+
+          <rect x="496" y="562" width="328" height="38" rx="14" fill="#ffffff" stroke="#d8e2ef"/>
+          <text x="660" y="586" text-anchor="middle" class="pill-text">Dimensions are unpartitioned. Facts partition by year and month for Athena pruning.</text>
+        </svg>
+      </div>
+      <div class="diagram-note">
+        <div class="note"><strong>Dimension jobs</strong><span>Customer and product tables stay small and are read in full, so no date partitioning is needed.</span></div>
+        <div class="note"><strong>Fact jobs</strong><span>Orders, order items, payments, and shipments are partitioned by integer year and month columns.</span></div>
+        <div class="note"><strong>Parallel design</strong><span>The orchestration layer can run all six jobs together because there are no write conflicts between outputs.</span></div>
+      </div>
+    </section>
+
+    <section class="diagram-card" id="quality">
+      <div class="diagram-head">
+        <div class="eyebrow">Validation and observability</div>
+        <h2>Clean rows go to Silver. Problem rows remain inspectable.</h2>
+      </div>
+      <div class="svg-frame">
+        <svg viewBox="0 0 1320 560" role="img" aria-label="Validation, quarantine, and metrics flow">
+          <defs>
+            <marker id="arrow-slate" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#344054"/></marker>
+            <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0f766e"/></marker>
+            <marker id="arrow-olive" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#556b2f"/></marker>
+          </defs>
+          <rect width="1320" height="560" rx="30" fill="#fbfdff"/>
+          <text x="44" y="52" class="title" style="font-size:24px">The quality gate before Silver</text>
+          <text x="44" y="80" class="sub" style="font-size:14px">Validation is not a report after the fact. It splits the dataframe before anything clean is written downstream.</text>
+
+          <rect class="node node-blue" x="70" y="218" width="190" height="86" rx="22"/>
+          <text x="165" y="253" text-anchor="middle" class="title">Reconciled DataFrame</text>
+          <text x="165" y="276" text-anchor="middle" class="sub">latest non-delete rows</text>
+
+          <rect class="node node-amber" x="340" y="118" width="250" height="112" rx="24"/>
+          <text x="465" y="152" text-anchor="middle" class="title">Schema enforcement</text>
+          <text x="465" y="176" text-anchor="middle" class="sub">Explicit StructType</text>
+          <text x="465" y="198" text-anchor="middle" class="sub">Fail fast on type drift</text>
+
+          <rect class="node node-blue" x="340" y="292" width="250" height="112" rx="24"/>
+          <text x="465" y="326" text-anchor="middle" class="title">Validation rules</text>
+          <text x="465" y="350" text-anchor="middle" class="sub">Not-null keys</text>
+          <text x="465" y="372" text-anchor="middle" class="sub">Valid statuses and amounts</text>
+
+          <rect class="node node-teal" x="690" y="126" width="230" height="112" rx="24"/>
+          <text x="805" y="160" text-anchor="middle" class="title">Valid rows</text>
+          <text x="805" y="184" text-anchor="middle" class="sub">Write overwrite</text>
+          <text x="805" y="206" text-anchor="middle" class="sub">Parquet + Snappy</text>
+
+          <rect class="node node-rose" x="690" y="300" width="230" height="112" rx="24"/>
+          <text x="805" y="334" text-anchor="middle" class="title">Invalid rows</text>
+          <text x="805" y="358" text-anchor="middle" class="sub">Append to quarantine</text>
+          <text x="805" y="380" text-anchor="middle" class="sub">_validation_errors column</text>
+
+          <rect class="node node-teal" x="1024" y="126" width="220" height="112" rx="24"/>
+          <text x="1134" y="160" text-anchor="middle" class="title">Silver S3</text>
+          <text x="1134" y="184" text-anchor="middle" class="sub">Query-safe clean data</text>
+          <text x="1134" y="206" text-anchor="middle" class="sub">Crawler updates catalog</text>
+
+          <rect class="node node-rose" x="1024" y="300" width="220" height="112" rx="24"/>
+          <text x="1134" y="334" text-anchor="middle" class="title">Quarantine S3</text>
+          <text x="1134" y="358" text-anchor="middle" class="sub">Not queried as clean</text>
+          <text x="1134" y="380" text-anchor="middle" class="sub">Replay after correction</text>
+
+          <rect class="node" x="548" y="452" width="224" height="68" rx="18"/>
+          <text x="660" y="480" text-anchor="middle" class="title">EDP/DataQuality</text>
+          <text x="660" y="501" text-anchor="middle" class="sub">SilverRowCount</text>
+          <rect class="node" x="804" y="452" width="224" height="68" rx="18"/>
+          <text x="916" y="480" text-anchor="middle" class="title">EDP/DataFreshness</text>
+          <text x="916" y="501" text-anchor="middle" class="sub">SilverDataAgeHours</text>
+
+          <g class="flow"><path class="hit" d="M260 261 C300 236 316 184 340 174"/><path class="line" d="M260 261 C300 236 316 184 340 174"/></g>
+          <g class="flow blue"><path class="hit" d="M260 261 C304 296 318 340 340 348"/><path class="line" d="M260 261 C304 296 318 340 340 348"/></g>
+          <g class="flow teal"><path class="hit" d="M590 174 C632 174 650 182 690 182"/><path class="line" d="M590 174 C632 174 650 182 690 182"/></g>
+          <g class="flow teal"><path class="hit" d="M590 348 C640 320 654 220 690 182"/><path class="line" d="M590 348 C640 320 654 220 690 182"/></g>
+          <g class="flow"><path class="hit" d="M920 182 H1024"/><path class="line" d="M920 182 H1024"/></g>
+          <g class="flow"><path class="hit" d="M920 356 H1024"/><path class="line" d="M920 356 H1024"/></g>
+          <g class="flow return"><path class="hit" d="M805 238 C780 324 720 402 660 452"/><path class="line" d="M805 238 C780 324 720 402 660 452"/></g>
+          <g class="flow return"><path class="hit" d="M1134 238 C1100 328 1014 408 916 452"/><path class="line" d="M1134 238 C1100 328 1014 408 916 452"/></g>
+        </svg>
+      </div>
+      <div class="diagram-note">
+        <div class="note"><strong>No silent loss</strong><span>Invalid data is written separately with reason labels, so a bad record can be diagnosed instead of disappearing.</span></div>
+        <div class="note"><strong>Downstream trust</strong><span>dbt and Athena only read Silver, while Quarantine remains a controlled exception path for investigation.</span></div>
+        <div class="note"><strong>Observable runs</strong><span>Freshness and row-count metrics let orchestration detect stale or empty outputs without scanning S3.</span></div>
       </div>
     </section>
 
     <section class="diagram-card">
-      <header>
-        <div class="eyebrow">Runtime sequence</div>
-        <h2>How work moves through the repo</h2>
-      </header>
-      
-      <svg viewBox="0 0 1230 560" role="img" aria-label="Runtime interaction sequence">
-        <defs>
-          <marker id="arrow-dark" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#334155"/></marker>
-          <marker id="arrow-accent" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
-        </defs>
-        <rect x="0" y="0" width="1230" height="560" rx="28" fill="#fbfdff"/>
-        <text x="40" y="38" class="diagram-heading">Runtime interaction</text>
-        <line class="swimlane" x1="82.0" y1="96" x2="82.0" y2="500"/><rect class="actor-box" x="18.0" y="46" width="128" height="42" rx="12"/><text class="actor-label" x="82.0" y="72" text-anchor="middle">Bronze S3</text><line class="swimlane" x1="348.5" y1="96" x2="348.5" y2="500"/><rect class="actor-box" x="284.5" y="46" width="128" height="42" rx="12"/><text class="actor-label" x="348.5" y="72" text-anchor="middle">Glue job</text><line class="swimlane" x1="615.0" y1="96" x2="615.0" y2="500"/><rect class="actor-box" x="551.0" y="46" width="128" height="42" rx="12"/><text class="actor-label" x="615.0" y="72" text-anchor="middle">Validation</text><line class="swimlane" x1="881.5" y1="96" x2="881.5" y2="500"/><rect class="actor-box" x="817.5" y="46" width="128" height="42" rx="12"/><text class="actor-label" x="881.5" y="72" text-anchor="middle">Silver S3</text><line class="swimlane" x1="1148.0" y1="96" x2="1148.0" y2="500"/><rect class="actor-box" x="1084.0" y="46" width="128" height="42" rx="12"/><text class="actor-label" x="1148.0" y="72" text-anchor="middle">Quarantine</text>
-        <g class="flow-arrow accent"><path class="hit" d="M82.0 138 H348.5"/><path class="line" d="M82.0 138 H348.5"/><text x="215.2" y="128" text-anchor="middle">1. Trigger</text></g><g class="flow-arrow accent"><path class="hit" d="M348.5 190 H615.0"/><path class="line" d="M348.5 190 H615.0"/><text x="481.8" y="180" text-anchor="middle">2. Route work</text></g><g class="flow-arrow accent"><path class="hit" d="M615.0 248 H881.5"/><path class="line" d="M615.0 248 H881.5"/><text x="748.2" y="238" text-anchor="middle">3. Process / generate</text></g><g class="flow-arrow accent"><path class="hit" d="M881.5 306 H1148.0"/><path class="line" d="M881.5 306 H1148.0"/><text x="1014.8" y="296" text-anchor="middle">4. Read or write data</text></g><g class="flow-arrow return"><path class="hit" d="M1148.0 364 H615.0"/><path class="line" d="M1148.0 364 H615.0"/><text x="881.5" y="354" text-anchor="middle">5. Return evidence</text></g><g class="flow-arrow return"><path class="hit" d="M615.0 420 H348.5"/><path class="line" d="M615.0 420 H348.5"/><text x="481.8" y="410" text-anchor="middle">6. Package response</text></g><g class="flow-arrow return"><path class="hit" d="M348.5 470 H82.0"/><path class="line" d="M348.5 470 H82.0"/><text x="215.2" y="460" text-anchor="middle">7. Operational result</text></g>
-      </svg>
-    
-      <div class="explain">
-        <div><strong>Trigger</strong><span>A person, workflow, schedule, or frontend starts the sequence.</span></div>
-        <div><strong>Processing</strong><span>The repo performs its specialized job and returns evidence or artifacts.</span></div>
-        <div><strong>Handoff</strong><span>The output feeds another repository, platform layer, or stakeholder interface.</span></div>
+      <div class="diagram-head">
+        <div class="eyebrow">Silver data model</div>
+        <h2>The jobs create a practical star-schema foundation for dbt.</h2>
+      </div>
+      <div class="svg-frame">
+        <svg viewBox="0 0 1320 560" role="img" aria-label="Silver star schema tables created by Glue jobs">
+          <defs>
+            <marker id="arrow-slate" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#344054"/></marker>
+            <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0f766e"/></marker>
+            <marker id="arrow-olive" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#556b2f"/></marker>
+          </defs>
+          <rect width="1320" height="560" rx="30" fill="#fbfdff"/>
+          <text x="44" y="52" class="title" style="font-size:24px">Silver star schema produced by this repo</text>
+          <text x="44" y="80" class="sub" style="font-size:14px">Silver tables are clean enough for dbt to aggregate, but still close to operational business entities.</text>
+
+          <rect class="node node-olive" x="78" y="100" width="235" height="120" rx="24"/>
+          <text x="196" y="136" text-anchor="middle" class="title">dim_customer</text>
+          <text x="196" y="162" text-anchor="middle" class="sub">customer_id</text>
+          <text x="196" y="184" text-anchor="middle" class="sub">email, country, signup_date</text>
+
+          <rect class="node node-olive" x="1006" y="100" width="235" height="120" rx="24"/>
+          <text x="1124" y="136" text-anchor="middle" class="title">dim_product</text>
+          <text x="1124" y="162" text-anchor="middle" class="sub">product_id</text>
+          <text x="1124" y="184" text-anchor="middle" class="sub">brand, category, unit_price</text>
+
+          <rect class="node node-blue" x="542" y="110" width="235" height="120" rx="24"/>
+          <text x="660" y="146" text-anchor="middle" class="title">fact_orders</text>
+          <text x="660" y="172" text-anchor="middle" class="sub">order_id, customer_id</text>
+          <text x="660" y="194" text-anchor="middle" class="sub">order_year / order_month</text>
+
+          <rect class="node node-blue" x="542" y="300" width="235" height="120" rx="24"/>
+          <text x="660" y="336" text-anchor="middle" class="title">fact_order_items</text>
+          <text x="660" y="362" text-anchor="middle" class="sub">order_id, product_id</text>
+          <text x="660" y="384" text-anchor="middle" class="sub">line_total, quantity</text>
+
+          <rect class="node node-blue" x="174" y="330" width="235" height="120" rx="24"/>
+          <text x="292" y="366" text-anchor="middle" class="title">fact_payments</text>
+          <text x="292" y="392" text-anchor="middle" class="sub">order_id, amount</text>
+          <text x="292" y="414" text-anchor="middle" class="sub">payment_year / payment_month</text>
+
+          <rect class="node node-blue" x="910" y="330" width="235" height="120" rx="24"/>
+          <text x="1028" y="366" text-anchor="middle" class="title">fact_shipments</text>
+          <text x="1028" y="392" text-anchor="middle" class="sub">order_id, carrier</text>
+          <text x="1028" y="414" text-anchor="middle" class="sub">shipped_year / shipped_month</text>
+
+          <g class="flow"><path class="hit" d="M313 160 C388 160 468 162 542 170"/><path class="line" d="M313 160 C388 160 468 162 542 170"/><text x="418" y="146" text-anchor="middle">customer_id</text></g>
+          <g class="flow"><path class="hit" d="M1006 160 C920 160 846 162 777 170"/><path class="line" d="M1006 160 C920 160 846 162 777 170"/><text x="895" y="146" text-anchor="middle">product_id through items</text></g>
+          <g class="flow teal"><path class="hit" d="M660 230 V300"/><path class="line" d="M660 230 V300"/><text x="714" y="269">order_id</text></g>
+          <g class="flow teal"><path class="hit" d="M542 376 C478 382 454 386 409 390"/><path class="line" d="M542 376 C478 382 454 386 409 390"/><text x="480" y="366" text-anchor="middle">order_id</text></g>
+          <g class="flow teal"><path class="hit" d="M777 376 C840 382 866 386 910 390"/><path class="line" d="M777 376 C840 382 866 386 910 390"/><text x="840" y="366" text-anchor="middle">order_id</text></g>
+
+          <rect x="424" y="478" width="472" height="48" rx="18" fill="#fff" stroke="#d8e2ef"/>
+          <text x="660" y="508" text-anchor="middle" class="pill-text">Partitioned facts let Athena skip irrelevant months before dbt builds Gold marts.</text>
+        </svg>
+      </div>
+      <div class="diagram-note">
+        <div class="note"><strong>Analytics shape</strong><span>Silver is structured so revenue, product, customer, payment, and delivery questions can be joined predictably.</span></div>
+        <div class="note"><strong>Partition strategy</strong><span>Date-heavy fact tables use year/month partitions so Athena scans less data for monthly and yearly business questions.</span></div>
+        <div class="note"><strong>dbt handoff</strong><span>The next repo transforms these Silver facts and dimensions into Gold tables for stakeholder-facing analytics.</span></div>
       </div>
     </section>
 
-    <section id="concepts">
-      <div class="eyebrow">Beginner-friendly concept map</div>
-      <h2>Key ideas to understand</h2>
-      <div class="concept-grid">
-          <article class="concept-card">
-            <h3>CDC reconciliation</h3>
-            <div class="mini-flow"><span class="mini-node">I</span><span class="mini-arrow">→</span><span class="mini-node">U</span><span class="mini-arrow">→</span><span class="mini-node">D</span><span class="mini-arrow">→</span><span class="mini-node">latest row</span></div>
-            <p>Many Bronze events become one current-state Silver record.</p>
-          </article>
-        
-          <article class="concept-card">
-            <h3>Quality gate</h3>
-            <div class="mini-flow"><span class="mini-node">Schema</span><span class="mini-arrow">→</span><span class="mini-node">Required fields</span><span class="mini-arrow">→</span><span class="mini-node">Referential checks</span></div>
-            <p>Invalid records are separated instead of silently polluting Silver.</p>
-          </article>
-        
-          <article class="concept-card">
-            <h3>Star schema</h3>
-            <div class="mini-flow"><span class="mini-node">Facts</span><span class="mini-arrow">→</span><span class="mini-node">Dimensions</span><span class="mini-arrow">→</span><span class="mini-node">Clean joins</span></div>
-            <p>Silver is shaped for reliable SQL modeling in dbt.</p>
-          </article>
-        </div>
+    <section class="diagram-card" id="ci">
+      <div class="diagram-head">
+        <div class="eyebrow">Delivery path</div>
+        <h2>The CI pipeline avoids expensive Spark work until fast gates pass.</h2>
+      </div>
+      <div class="svg-frame">
+        <svg viewBox="0 0 1320 520" role="img" aria-label="CI/CD pipeline for Glue jobs">
+          <defs>
+            <marker id="arrow-slate" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#344054"/></marker>
+            <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/></marker>
+            <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0f766e"/></marker>
+            <marker id="arrow-olive" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#556b2f"/></marker>
+          </defs>
+          <rect width="1320" height="520" rx="30" fill="#fbfdff"/>
+          <text x="44" y="52" class="title" style="font-size:24px">Code-to-Glue deployment path</text>
+          <text x="44" y="80" class="sub" style="font-size:14px">The large Glue 4.0 Docker integration test only runs after quick checks prove the change is worth testing end-to-end.</text>
+
+          <rect class="node node-blue" x="70" y="204" width="160" height="74" rx="18"/>
+          <text x="150" y="235" text-anchor="middle" class="title">Push / PR</text>
+          <text x="150" y="256" text-anchor="middle" class="sub">source change</text>
+
+          <rect class="node" x="315" y="115" width="185" height="70" rx="18"/>
+          <text x="408" y="144" text-anchor="middle" class="small-title">Lint + type check</text>
+          <text x="408" y="164" text-anchor="middle" class="sub">ruff + mypy</text>
+          <rect class="node" x="315" y="225" width="185" height="70" rx="18"/>
+          <text x="408" y="254" text-anchor="middle" class="small-title">Unit tests</text>
+          <text x="408" y="274" text-anchor="middle" class="sub">CDC + paths</text>
+          <rect class="node" x="315" y="335" width="185" height="70" rx="18"/>
+          <text x="408" y="364" text-anchor="middle" class="small-title">Security scan</text>
+          <text x="408" y="384" text-anchor="middle" class="sub">bandit</text>
+
+          <rect class="node node-amber" x="610" y="204" width="190" height="74" rx="18"/>
+          <text x="705" y="235" text-anchor="middle" class="title">Gate decision</text>
+          <text x="705" y="256" text-anchor="middle" class="sub">all fast checks pass</text>
+
+          <rect class="node node-blue" x="895" y="155" width="220" height="110" rx="24"/>
+          <text x="1005" y="191" text-anchor="middle" class="title">Glue integration</text>
+          <text x="1005" y="216" text-anchor="middle" class="sub">AWS Glue 4.0 Docker</text>
+          <text x="1005" y="238" text-anchor="middle" class="sub">Runs all 6 jobs locally</text>
+
+          <rect class="node node-teal" x="895" y="330" width="220" height="92" rx="24"/>
+          <text x="1005" y="364" text-anchor="middle" class="title">Deploy workflow</text>
+          <text x="1005" y="389" text-anchor="middle" class="sub">Upload scripts + lib.zip</text>
+          <text x="1005" y="411" text-anchor="middle" class="sub">Update Glue definitions</text>
+
+          <rect class="node node-olive" x="1190" y="330" width="86" height="92" rx="22"/>
+          <text x="1233" y="368" text-anchor="middle" class="title">AWS</text>
+          <text x="1233" y="392" text-anchor="middle" class="sub">Glue</text>
+
+          <g class="flow"><path class="hit" d="M230 241 C264 188 286 152 315 150"/><path class="line" d="M230 241 C264 188 286 152 315 150"/></g>
+          <g class="flow"><path class="hit" d="M230 241 H315"/><path class="line" d="M230 241 H315"/></g>
+          <g class="flow"><path class="hit" d="M230 241 C264 300 286 370 315 370"/><path class="line" d="M230 241 C264 300 286 370 315 370"/></g>
+          <g class="flow blue"><path class="hit" d="M500 150 C556 164 585 204 610 224"/><path class="line" d="M500 150 C556 164 585 204 610 224"/></g>
+          <g class="flow blue"><path class="hit" d="M500 260 C548 260 582 248 610 242"/><path class="line" d="M500 260 C548 260 582 248 610 242"/></g>
+          <g class="flow blue"><path class="hit" d="M500 370 C556 338 585 276 610 258"/><path class="line" d="M500 370 C556 338 585 276 610 258"/></g>
+          <g class="flow"><path class="hit" d="M800 241 C838 230 866 214 895 210"/><path class="line" d="M800 241 C838 230 866 214 895 210"/></g>
+          <g class="flow teal"><path class="hit" d="M1005 265 V330"/><path class="line" d="M1005 265 V330"/></g>
+          <g class="flow olive"><path class="hit" d="M1115 376 H1190"/><path class="line" d="M1115 376 H1190"/></g>
+        </svg>
+      </div>
+      <div class="diagram-note">
+        <div class="note"><strong>Fast gates first</strong><span>Cheap checks catch style, type, unit, and security problems before pulling the large Glue Docker image.</span></div>
+        <div class="note"><strong>Real runtime test</strong><span>The integration test executes all six PySpark jobs inside the same Glue 4.0 runtime used by AWS.</span></div>
+        <div class="note"><strong>Manual promotion</strong><span>Deployment uses OIDC and environment approvals for staging and prod, with no long-lived AWS keys.</span></div>
+      </div>
     </section>
 
-    <section>
-      <div class="eyebrow">README navigation</div>
-      <h2>Detailed sections in the markdown README</h2>
-      <div class="sections">
-          <article class="section-tile">
-            <span>01</span>
-            <strong>What this repository does</strong>
-          </article>
-        
-          <article class="section-tile">
-            <span>02</span>
-            <strong>How Bronze data arrives</strong>
-          </article>
-        
-          <article class="section-tile">
-            <span>03</span>
-            <strong>The six jobs</strong>
-          </article>
-        
-          <article class="section-tile">
-            <span>04</span>
-            <strong>Shared library (`lib/`)</strong>
-          </article>
-        
-          <article class="section-tile">
-            <span>05</span>
-            <strong>Validation and quarantine</strong>
-          </article>
-        
-          <article class="section-tile">
-            <span>06</span>
-            <strong>Repository structure</strong>
-          </article>
+    <section id="concepts" class="grid" aria-label="Repository concepts">
+      <article class="concept">
+        <h3>Repository mental model</h3>
+        <div class="mini-flow">
+          <span class="mini-node">Bronze history</span>
+          <span class="mini-arrow">→</span>
+          <span class="mini-node">Current state</span>
+          <span class="mini-arrow">→</span>
+          <span class="mini-node">Silver tables</span>
         </div>
+        <p>The repo is a controlled conversion point: noisy DMS history in, clean analytics structures out.</p>
+      </article>
+      <article class="concept">
+        <h3>Why overwrite Silver</h3>
+        <div class="mini-flow">
+          <span class="mini-node">Read all Bronze</span>
+          <span class="mini-arrow">→</span>
+          <span class="mini-node">Rebuild canonical table</span>
+        </div>
+        <p>Because CDC reconciliation depends on history, the safest result is a fresh canonical snapshot each run.</p>
+      </article>
+      <article class="concept">
+        <h3>Where to read exact commands</h3>
+        <div class="repo-links">
+          <a class="button primary" href="https://enterprise-data-platform-emeka.github.io/platform-glue-jobs/html/?v=latest">HTML version</a>
+          <a class="button" href="https://github.com/enterprise-data-platform-emeka/platform-glue-jobs/blob/main/README.md">Markdown README</a>
+        </div>
+      </article>
     </section>
 
-    <p class="footer">Use this page to understand the architecture visually; use the rendered README for exact setup and troubleshooting details.</p>
+    <p class="footer">Visual README for platform-glue-jobs. The markdown README remains the exact command and operations reference.</p>
   </main>
 </body>
 </html>
