@@ -294,3 +294,8 @@ Each job runs on Glue G.1X workers (2 vCPU, 8 GB each). The number of workers au
 - KMS encryption: the Glue security configuration encrypts job bookmarks, CloudWatch logs, and S3 output using the platform KMS key.
 - IAM least privilege: the shared Glue IAM role has read access on Bronze and Quarantine, write access on Silver and Quarantine, and CloudWatch PutMetricData. Nothing else.
 - Quarantine data is isolated from Silver by S3 prefix. Downstream tools cannot accidentally query it alongside clean data.
+
+
+## Reproducible seed sessions
+
+DMS ingestion age is measured against UTC now, independently of the fixed 36-month business history. Replay coverage remains a dbt dataset-cutoff check. The shared library applies to both Step Functions and MWAA.
